@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "Clinic API (КП6)",
+    "name": "Clinic API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -18,6 +18,10 @@
     },
     {
       "key": "doctor_id",
+      "value": ""
+    },
+    {
+      "key": "appointment_id",
       "value": ""
     }
   ],
@@ -309,6 +313,298 @@
               }
             ],
             "url": "{{base_url}}/doctors/999"
+          }
+        }
+      ]
+    },
+    {
+      "name": "КП7 Ошибки и связи",
+      "item": [
+        {
+          "name": "01 Врач не найден (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/999"
+          }
+        },
+        {
+          "name": "02 Несуществующий маршрут (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/nothing"
+          }
+        },
+        {
+          "name": "03 Неверный метод (405)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/users"
+          }
+        },
+        {
+          "name": "04 График - ошибки валидации (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/schedules",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weekday\": 9,\n  \"start_time\": \"18:00\",\n  \"end_time\": \"09:00\",\n  \"slot_minutes\": 25\n}"
+            }
+          }
+        },
+        {
+          "name": "05 График - добавить суббота (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/schedules",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weekday\": 6,\n  \"start_time\": \"09:00\",\n  \"end_time\": \"13:00\",\n  \"slot_minutes\": 30\n}"
+            }
+          }
+        },
+        {
+          "name": "06 График врача (список)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/schedules"
+          }
+        },
+        {
+          "name": "07 Добавить специальность врачу - attach",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/specialties",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"specialty_id\": 5\n}"
+            }
+          }
+        },
+        {
+          "name": "08 Убрать специальность у врача - detach",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/specialties/5"
+          }
+        },
+        {
+          "name": "09 Специальность не существует (422 exists)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/specialties",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"specialty_id\": 999\n}"
+            }
+          }
+        },
+        {
+          "name": "10 Медкнижка (список)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/medical-records"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('appointment_id', pm.response.json().data[0].appointment_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11 Повторная запись в медкнижку (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/{{appointment_id}}/medical-record",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosis\": \"ОРВИ\",\n  \"prescription\": \"Покой\"\n}"
+            }
+          }
+        },
+        {
+          "name": "12 Удалить приём с медкнижкой (409)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/{{appointment_id}}"
+          }
+        },
+        {
+          "name": "13 Удалить пациента с записями (409)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/users/2"
+          }
+        },
+        {
+          "name": "14 Запись на приём - ошибки (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"doctor_id\": 999,\n  \"date\": \"2020-01-01\",\n  \"time\": \"9 утра\"\n}"
+            }
+          }
+        },
+        {
+          "name": "15 Пользователи-врачи с количеством записей",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/users?role=doctor"
+          }
+        },
+        {
+          "name": "16 Неверная роль (422 enum)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/users/3/role",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"boss\"\n}"
+            }
+          }
+        },
+        {
+          "name": "17 Записи на приём (пагинация)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments?per_page=5"
           }
         }
       ]

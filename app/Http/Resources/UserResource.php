@@ -17,6 +17,7 @@ class UserResource extends JsonResource
             'birth_date' => $this->birth_date?->format('Y-m-d'),
             'role' => $this->role?->value,
             'role_label' => $this->role?->label(),
+            'appointments_count' => $this->whenCounted('appointments'),
             'doctor' => new DoctorResource($this->whenLoaded('doctor')),
             'created_at' => $this->created_at?->toDateTimeString(),
         ];
