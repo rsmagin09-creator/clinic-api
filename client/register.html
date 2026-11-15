@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Регистрация — Запись в поликлинику</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header><div class="logo">🏥 Поликлиника</div><nav><a href="index.html">Врачи</a></nav><div id="user-box"></div></header>
+<main>
+  <div class="card auth">
+    <h1>Регистрация пациента</h1>
+    <form id="reg-form" novalidate>
+      <label>ФИО</label><input name="name" placeholder="Иванова Мария Сергеевна">
+      <div class="field-error" data-error="name"></div>
+      <label>Email</label><input name="email" type="email">
+      <div class="field-error" data-error="email"></div>
+      <label>Телефон</label><input name="phone" placeholder="+7701...">
+      <div class="field-error" data-error="phone"></div>
+      <label>Дата рождения</label><input name="birth_date" type="date">
+      <div class="field-error" data-error="birth_date"></div>
+      <label>Пароль</label><input name="password" type="password">
+      <div class="field-error" data-error="password"></div>
+      <label>Повторите пароль</label><input name="password_confirmation" type="password">
+      <div class="field-error" data-error="password_confirmation"></div>
+      <div class="alert" hidden></div>
+      <button class="primary" type="submit">Зарегистрироваться</button>
+    </form>
+    <p class="hint">Уже есть аккаунт? <a href="login.html">Войти</a></p>
+  </div>
+</main>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+  const form = document.getElementById('reg-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(form));
+    if (!body.phone) delete body.phone;
+    if (!body.birth_date) delete body.birth_date;
+    const res = await api('POST', '/register', body, { redirectOn401: false });
+    if (res.ok) {
+      auth.set(res.data.token);
+      auth.setUser(res.data.user);
+      location.href = 'index.html';
+    } else {
+      showErrors(form, res.errors, res.message);
+    }
+  });
+</script>
+</body>
+</html>

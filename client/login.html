@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Вход — Запись в поликлинику</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header><div class="logo">🏥 Поликлиника</div><nav><a href="index.html">Врачи</a></nav><div id="user-box"></div></header>
+<main>
+  <div class="card auth">
+    <h1>Вход в личный кабинет</h1>
+    <form id="login-form" novalidate>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" placeholder="patient@clinic.ru" required>
+      <div class="field-error" data-error="email"></div>
+      <label for="password">Пароль</label>
+      <input id="password" name="password" type="password" required>
+      <div class="field-error" data-error="password"></div>
+      <div class="alert" hidden></div>
+      <button class="primary" type="submit">Войти</button>
+    </form>
+    <p class="hint">Нет аккаунта? <a href="register.html">Зарегистрироваться</a><br>
+      Тестовые: patient@clinic.ru, doctor@clinic.ru, admin@clinic.ru — пароль <b>password</b></p>
+  </div>
+</main>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+  const form = document.getElementById('login-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(form));
+    const btn = form.querySelector('button'); btn.disabled = true;
+    const res = await api('POST', '/login', body, { redirectOn401: false });
+    btn.disabled = false;
+    if (res.ok) {
+      auth.set(res.data.token);
+      auth.setUser(res.data.user);
+      location.href = 'index.html';
+    } else {
+      showErrors(form, res.errors, res.message);
+    }
+  });
+</script>
+</body>
+</html>

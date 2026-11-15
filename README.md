@@ -57,3 +57,12 @@ php artisan test
 ## Журналы
 - `storage/logs/laravel.log` — события бизнес-логики (регистрация, вход, запись на приём, медкнижка, нарушения правил)
 - `storage/logs/api-ГГГГ-ММ-ДД.log` — каждый запрос к API (метод, URL, пользователь, код ответа, время). Пароли и токены не пишутся.
+
+## Веб-клиент
+Каталог `client/` — отдельное приложение (HTML, CSS, JavaScript + fetch), работает на своём порту.
+```bash
+php -S 127.0.0.1:5500 -t client
+```
+Открыть http://127.0.0.1:5500/login.html. Адрес API задаётся в `client/js/config.js`.
+CORS настроен в `config/cors.php`: разрешён только адрес клиента из `CLIENT_URL` в `.env`
+(`CLIENT_URL=http://127.0.0.1:5500`), `supports_credentials = false` (авторизация Bearer-токеном).
