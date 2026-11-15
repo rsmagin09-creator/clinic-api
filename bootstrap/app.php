@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\BusinessException;
 use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\MedicalRecord;
@@ -42,6 +43,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (ValidationException $e, Request $request) use ($isApi) {
             if ($isApi($request)) {
                 return response()->json(['message' => 'Ошибка валидации', 'errors' => $e->errors()], 422);
+            }
+        });
+
+        // 409 — нарушение бизнес-правила (BusinessException)
+        $exceptions->render(function (BusinessException $e, Request $request) use ($isApi) {
+            if ($isApi($request)) {
+                return response()->json(['message' => $e->getMessage()], 409);
             }
         });
 

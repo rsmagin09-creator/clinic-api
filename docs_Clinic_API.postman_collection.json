@@ -31,6 +31,30 @@
     {
       "key": "next_date",
       "value": ""
+    },
+    {
+      "key": "work_date",
+      "value": ""
+    },
+    {
+      "key": "off_date",
+      "value": ""
+    },
+    {
+      "key": "slot_time",
+      "value": ""
+    },
+    {
+      "key": "slot_time2",
+      "value": ""
+    },
+    {
+      "key": "booked_id",
+      "value": ""
+    },
+    {
+      "key": "sched_id",
+      "value": ""
     }
   ],
   "item": [
@@ -1028,6 +1052,516 @@
               }
             ],
             "url": "{{base_url}}/appointments?per_page=5"
+          }
+        }
+      ]
+    },
+    {
+      "name": "КП9 Запись на приём и фильтры",
+      "item": [
+        {
+          "name": "01 Вход пациента",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient@clinic.ru\",\n  \"password\": \"password\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) pm.collectionVariables.set(\"token\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 График врача (рабочие дни)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/schedules"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const days = pm.response.json().data.map(s => s.weekday);",
+                  "  const fmt = d => d.getFullYear() + \"-\" + String(d.getMonth() + 1).padStart(2, \"0\") + \"-\" + String(d.getDate()).padStart(2, \"0\");",
+                  "  let d = new Date(); d.setDate(d.getDate() + 1);",
+                  "  let work = null, off = null;",
+                  "  for (let i = 0; i < 14; i++) {",
+                  "    const wd = ((d.getDay() + 6) % 7) + 1;",
+                  "    if (!work && days.includes(wd)) work = fmt(d);",
+                  "    if (!off && !days.includes(wd)) off = fmt(d);",
+                  "    d.setDate(d.getDate() + 1);",
+                  "  }",
+                  "  pm.collectionVariables.set(\"work_date\", work); pm.collectionVariables.set(\"off_date\", off);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 Свободное время врача на дату",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/slots?date={{work_date}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set(\"slot_time\", pm.response.json().free_slots[0]); pm.collectionVariables.set(\"slot_time2\", pm.response.json().free_slots[1]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Записаться на приём (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": 1,\n  \"date\": \"{{work_date}}\",\n  \"time\": \"{{slot_time}}\",\n  \"reason\": \"Плановый осмотр\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) pm.collectionVariables.set(\"booked_id\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 Правило - время занято (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": 1,\n  \"date\": \"{{work_date}}\",\n  \"time\": \"{{slot_time}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "06 Правило - одна запись к врачу в день (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": 1,\n  \"date\": \"{{work_date}}\",\n  \"time\": \"{{slot_time2}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "07 Правило - время вне графика (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": 1,\n  \"date\": \"{{work_date}}\",\n  \"time\": \"23:00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "08 Правило - врач не работает в этот день (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": 1,\n  \"date\": \"{{off_date}}\",\n  \"time\": \"10:00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "09 Прошедшая дата (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": 1,\n  \"date\": \"2020-01-01\",\n  \"time\": \"10:00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "10 Свободное время после записи",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/slots?date={{work_date}}"
+          }
+        },
+        {
+          "name": "11 Отменить запись (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/{{booked_id}}/cancel"
+          }
+        },
+        {
+          "name": "12 Правило - повторная отмена (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/{{booked_id}}/cancel"
+          }
+        },
+        {
+          "name": "13 Вход врача",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doctor@clinic.ru\",\n  \"password\": \"password\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) pm.collectionVariables.set(\"token\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14 Врач - запланированные приёмы (фильтр)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments?status=scheduled&sort=date&order=asc&per_page=3"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.json().data.length) pm.collectionVariables.set(\"sched_id\", pm.response.json().data[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "15 Правило - медкнижка до завершения приёма (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/{{sched_id}}/medical-record",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosis\": \"ОРВИ\",\n  \"prescription\": \"Покой\"\n}"
+            }
+          }
+        },
+        {
+          "name": "16 Завершить приём (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/{{sched_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            }
+          }
+        },
+        {
+          "name": "17 Правило - недопустимая смена статуса (409)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/{{sched_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"no_show\"\n}"
+            }
+          }
+        },
+        {
+          "name": "18 Запись в медкнижку после приёма (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/{{sched_id}}/medical-record",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosis\": \"ОРВИ\",\n  \"examination\": \"Температура 37,6\",\n  \"prescription\": \"Обильное питьё, покой 3 дня\"\n}"
+            }
+          }
+        },
+        {
+          "name": "19 Вход администратора",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@clinic.ru\",\n  \"password\": \"password\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) pm.collectionVariables.set(\"token\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "20 Врачи - поиск, сортировка, пагинация",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors?search=ов&sort=experience_years&order=desc&per_page=3&page=1"
+          }
+        },
+        {
+          "name": "21 Врачи - фильтр по специальности, стр 2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors?specialty_id=1&sort=name&per_page=1&page=2"
+          }
+        },
+        {
+          "name": "22 Врачи - недопустимая сортировка (422)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors?sort=password&per_page=100"
+          }
+        },
+        {
+          "name": "23 Записи - фильтр по статусу и периоду",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments?status=completed&date_from=2026-11-01&date_to=2026-11-30&per_page=3&page=1"
+          }
+        },
+        {
+          "name": "24 Статистика за период",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/stats/appointments?from=2026-11-01&to=2026-11-30"
           }
         }
       ]

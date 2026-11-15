@@ -34,9 +34,6 @@ class MedicalRecordController extends Controller
         Gate::authorize('create', [MedicalRecord::class, $appointment]);
 
         $record = $this->service->create($appointment, $request->validated());
-        if (! $record) {
-            return response()->json(['message' => 'Запись в медкнижке по этому приёму уже существует'], 409);
-        }
 
         return (new MedicalRecordResource($record))->response()->setStatusCode(201);
     }

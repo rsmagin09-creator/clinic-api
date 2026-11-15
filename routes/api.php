@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DoctorSpecialtyController;
 use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\SpecialtyController;
+use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +40,7 @@ Route::prefix('v1')->name('v1.')->group(function () {
 
     Route::apiResource('specialties', SpecialtyController::class)->only(['index', 'show']);
     Route::apiResource('doctors', DoctorController::class)->only(['index', 'show']);
+    Route::get('doctors/{doctor}/slots', [DoctorController::class, 'slots'])->name('doctors.slots');
     Route::get('doctors/{doctor}/schedules', [ScheduleController::class, 'index'])->name('doctors.schedules.index');
     Route::get('schedules/{schedule}', [ScheduleController::class, 'show'])->name('schedules.show');
 
@@ -49,6 +51,9 @@ Route::prefix('v1')->name('v1.')->group(function () {
 
         // Записи на приём: доступ к конкретной записи проверяет AppointmentPolicy
         Route::apiResource('appointments', AppointmentController::class);
+        Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
+        Route::patch('appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])
+            ->middleware('role:doctor,admin')->name('appointments.status');
 
         // Медкнижка: доступ проверяет MedicalRecordPolicy
         Route::post('appointments/{appointment}/medical-record', [MedicalRecordController::class, 'store'])
@@ -70,6 +75,8 @@ Route::prefix('v1')->name('v1.')->group(function () {
             Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
             Route::patch('users/{user}/role', [UserController::class, 'updateRole'])->name('users.role');
             Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+            Route::get('stats/appointments', [StatsController::class, 'appointments'])->name('stats.appointments');
         });
     });
 });

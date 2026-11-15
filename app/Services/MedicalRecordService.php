@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
+use App\Exceptions\BusinessException;
 use App\Models\Appointment;
 use App\Models\MedicalRecord;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class MedicalRecordService
 {
@@ -31,14 +34,21 @@ class MedicalRecordService
             ->get();
     }
 
-    /** Возвращает null, если у приёма уже есть запись в медкнижке. */
-    public function create(Appointment $appointment, array $data): ?MedicalRecord
+    /** Запись в медкнижку — только по завершённому приёму и только одна на приём. */
+    public function create(Appointment $appointment, array $data): MedicalRecord
     {
-        if ($appointment->medicalRecord()->exists()) {
-            return null;
-        }
+        return DB::transaction(function () use ($appointment, $data) {
+            $appointment = Appointment::whereKey($appointment->id)->lockForUpdate()->firstOrFail();
 
-        return $appointment->medicalRecord()->create($data)->load('appointment.doctor.user');
+            if ($appointment->status !== AppointmentStatus::Completed) {
+                throw new BusinessException('Запись в медкнижку можно внести только по завершённому приёму');
+            }
+            if ($appointment->medicalRecord()->exists()) {
+                throw new BusinessException('Запись в медкнижке по этому приёму уже существует');
+            }
+
+            return $appointment->medicalRecord()->create($data)->load('appointment.doctor.user');
+        });
     }
 
     public function update(MedicalRecord $record, array $data): MedicalRecord
