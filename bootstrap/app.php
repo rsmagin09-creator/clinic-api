@@ -39,6 +39,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Нарушения бизнес-правил — ожидаемая ситуация: без стека вызовов в журнале (пишется warning ниже)
+        $exceptions->dontReport([BusinessException::class]);
+
         // Для всех запросов к API ошибки возвращаются только в JSON
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*') || $request->expectsJson());
 
