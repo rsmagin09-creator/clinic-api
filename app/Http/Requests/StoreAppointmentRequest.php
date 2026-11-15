@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,11 +13,11 @@ class StoreAppointmentRequest extends FormRequest
         return true;
     }
 
-    /** Запись на приём. Пациент — из токена (ПР8); администратор может указать user_id пациента. */
+    /** Пациент берётся из токена; администратор обязан указать user_id пациента. */
     public function rules(): array
     {
         return [
-            'user_id' => [$this->user() ? 'nullable' : 'required', 'integer',
+            'user_id' => [Rule::requiredIf($this->user()?->role === UserRole::Admin), 'nullable', 'integer',
                 Rule::exists('users', 'id')->where('role', 'patient')],
             'doctor_id' => ['required', 'integer', 'exists:doctors,id'],
             'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today', 'before_or_equal:+30 days'],

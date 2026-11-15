@@ -2,16 +2,21 @@
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
+use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class AppointmentService
 {
     private const RELATIONS = ['user', 'doctor.user', 'doctor.specialties'];
 
-    public function list(int $perPage = 15): LengthAwarePaginator
+    /** Список с учётом роли: пациент — свои записи, врач — приёмы к себе, админ — все. */
+    public function list(User $user, int $perPage = 15): LengthAwarePaginator
     {
         return Appointment::with(self::RELATIONS)
+            ->when($user->role === UserRole::Patient, fn ($q) => $q->where('user_id', $user->id))
+            ->when($user->role === UserRole::Doctor, fn ($q) => $q->where('doctor_id', $user->doctor?->id))
             ->orderByDesc('date')->orderBy('time')
             ->paginate($perPage);
     }
@@ -34,7 +39,6 @@ class AppointmentService
         return $appointment->load(self::RELATIONS);
     }
 
-    /** Запись с заполненной медкнижкой удалить нельзя (restrict) — вернётся 409. */
     public function delete(Appointment $appointment): void
     {
         $appointment->delete();
