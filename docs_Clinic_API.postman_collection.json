@@ -1,0 +1,317 @@
+{
+  "info": {
+    "name": "Clinic API (КП6)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "host",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api/v1"
+    },
+    {
+      "key": "specialty_id",
+      "value": ""
+    },
+    {
+      "key": "doctor_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "01 Проверка API (health)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{host}}/api/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Специальности",
+      "item": [
+        {
+          "name": "01 Список специальностей",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties"
+          }
+        },
+        {
+          "name": "02 Специальность по id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties/1"
+          }
+        },
+        {
+          "name": "03 Создать специальность",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Педиатр\",\n  \"description\": \"Приём детей до 18 лет\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) pm.collectionVariables.set('specialty_id', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Создать - ошибка валидации (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"description\": \"x\"\n}"
+            }
+          }
+        },
+        {
+          "name": "05 Изменить специальность",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties/{{specialty_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Педиатр (детский врач)\",\n  \"description\": \"Приём детей\"\n}"
+            }
+          }
+        },
+        {
+          "name": "06 Несуществующая специальность (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties/999"
+          }
+        },
+        {
+          "name": "07 Удалить специальность (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties/{{specialty_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Врачи",
+      "item": [
+        {
+          "name": "01 Список врачей",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors"
+          }
+        },
+        {
+          "name": "02 Врач по id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1"
+          }
+        },
+        {
+          "name": "03 Создать врача",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Кузнецов Андрей Викторович\",\n  \"email\": \"kuznecov@clinic.ru\",\n  \"phone\": \"+77017778899\",\n  \"password\": \"password123\",\n  \"cabinet\": \"204\",\n  \"experience_years\": 7,\n  \"description\": \"Врач первой категории\",\n  \"specialty_ids\": [\n    2,\n    4\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) pm.collectionVariables.set('doctor_id', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Создать - ошибка валидации (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"email\": \"не-email\",\n  \"password\": \"123\",\n  \"cabinet\": \"\",\n  \"experience_years\": -1,\n  \"specialty_ids\": [\n    999\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "05 Изменить врача",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/{{doctor_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cabinet\": \"210\",\n  \"experience_years\": 8,\n  \"specialty_ids\": [\n    2\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "06 Удалить врача (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/{{doctor_id}}"
+          }
+        },
+        {
+          "name": "07 Удалить врача с записями (409)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1"
+          }
+        },
+        {
+          "name": "08 Несуществующий врач (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/999"
+          }
+        }
+      ]
+    }
+  ]
+}

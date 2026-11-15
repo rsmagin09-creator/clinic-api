@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\DoctorController;
+use App\Http\Controllers\Api\SpecialtyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +25,12 @@ Route::get('/health', function () {
         return response()->json($response, 503);
     }
 })->name('health');
+
+Route::prefix('v1')->name('v1.')->group(function () {
+    // Справочники (CRUD). В ПР8 будут защищены middleware auth:sanctum и role:admin
+    Route::apiResource('specialties', SpecialtyController::class);
+    Route::apiResource('doctors', DoctorController::class);
+});
 
 Route::get('/user', function (Request $request) {
     return $request->user();
