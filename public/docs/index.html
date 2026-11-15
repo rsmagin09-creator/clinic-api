@@ -1,0 +1,518 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Clinic API — документация</title>
+<style>body{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f5f7fa;color:#222}header{background:#1f4e79;color:#fff;padding:18px 28px}header h1{margin:0;font-size:24px}
+nav{background:#fff;padding:10px 28px;border-bottom:1px solid #ddd;position:sticky;top:0}nav a{margin-right:16px;color:#1f4e79;text-decoration:none;font-weight:600}
+main{padding:10px 28px 40px;max-width:1200px}h2{color:#1f4e79;border-bottom:2px solid #1f4e79;padding-bottom:4px;margin-top:30px}
+.ep{background:#fff;border:1px solid #dde3ea;border-radius:8px;padding:12px 16px;margin:12px 0}.head{display:flex;align-items:center;gap:10px}
+.m{color:#fff;font-weight:700;border-radius:4px;padding:3px 8px;font-size:12px;min-width:52px;text-align:center}code{font-size:15px;font-weight:600}
+.role{margin-left:auto;background:#eef3f8;border-radius:12px;padding:2px 10px;font-size:12px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+pre{background:#1e1e1e;color:#d4d4d4;padding:8px 10px;border-radius:6px;font-size:12px;overflow:auto;max-height:260px}.lbl{font-size:12px;color:#555;font-weight:600;margin-top:6px}
+.err{display:inline-block;background:#fdecea;color:#b71c1c;border-radius:4px;padding:2px 8px;margin:3px 4px 0 0;font-size:12px}.muted{color:#999}
+.info{background:#fff;border:1px solid #dde3ea;border-radius:8px;padding:12px 16px;margin-top:14px;font-size:14px}</style></head><body>
+<header><h1>Clinic API — запись в поликлинику</h1><div>REST API на Laravel 13 · версия v1 · базовый адрес <b>http://127.0.0.1:8000/api/v1</b></div></header>
+<nav><a href="#g0">Аутентификация</a><a href="#g1">Специальности</a><a href="#g2">Врачи</a><a href="#g3">График работы</a><a href="#g4">Записи на приём</a><a href="#g5">Медкнижка</a><a href="#g6">Администрирование</a></nav><main><div class="info"><b>Аутентификация:</b> Laravel Sanctum, заголовок <code>Authorization: Bearer &lt;token&gt;</code>; токен выдаётся в /login и /register.
+Все запросы — с заголовком <code>Accept: application/json</code>. Ошибки возвращаются в едином формате <code>{"message": "..."}</code>, ошибки валидации дополнительно с <code>errors</code>.<br>
+<b>Роли:</b> гость, patient (пациент), doctor (врач), admin (администратор). <b>Тестовые учётные записи</b> (пароль <code>password</code>): admin@clinic.ru, doctor@clinic.ru, patient@clinic.ru.</div><h2 id="g0">Аутентификация</h2><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/register</code><span class="role">гость</span></div>
+<p>Регистрация пациента. Возвращает пользователя и токен.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;name&quot;: &quot;Иванова Мария&quot;,
+  &quot;email&quot;: &quot;ivanova@mail.ru&quot;,
+  &quot;phone&quot;: &quot;+77019998877&quot;,
+  &quot;birth_date&quot;: &quot;1995-04-12&quot;,
+  &quot;password&quot;: &quot;password123&quot;,
+  &quot;password_confirmation&quot;: &quot;password123&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 201</div><pre>{
+  &quot;user&quot;: {
+    &quot;id&quot;: 2,
+    &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;,
+    &quot;email&quot;: &quot;patient@clinic.ru&quot;,
+    &quot;phone&quot;: &quot;+77011111111&quot;,
+    &quot;birth_date&quot;: &quot;1990-01-24&quot;,
+    &quot;role&quot;: &quot;patient&quot;,
+    &quot;role_label&quot;: &quot;Пациент&quot;
+  },
+  &quot;token&quot;: &quot;1|YBRDAmbb4nEmGQvXPBL...&quot;,
+  &quot;token_type&quot;: &quot;Bearer&quot;
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/login</code><span class="role">гость</span></div>
+<p>Вход по email и паролю, выдача Bearer-токена (живёт 24 ч).</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;email&quot;: &quot;patient@clinic.ru&quot;,
+  &quot;password&quot;: &quot;password&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;user&quot;: {
+    &quot;id&quot;: 2,
+    &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;,
+    &quot;email&quot;: &quot;patient@clinic.ru&quot;,
+    &quot;phone&quot;: &quot;+77011111111&quot;,
+    &quot;birth_date&quot;: &quot;1990-01-24&quot;,
+    &quot;role&quot;: &quot;patient&quot;,
+    &quot;role_label&quot;: &quot;Пациент&quot;
+  },
+  &quot;token&quot;: &quot;2|pLN2ZoEdlmMBWuxn...&quot;,
+  &quot;token_type&quot;: &quot;Bearer&quot;,
+  &quot;expires_in_minutes&quot;: 1440
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/logout</code><span class="role">любая</span></div>
+<p>Выход: удаление текущего токена.</p><div class="cols"><div></div><div><div class="lbl">Ответ — 204 No Content</div></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/user</code><span class="role">любая</span></div>
+<p>Данные текущего пользователя.</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 2,
+    &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;,
+    &quot;email&quot;: &quot;patient@clinic.ru&quot;,
+    &quot;phone&quot;: &quot;+77011111111&quot;,
+    &quot;birth_date&quot;: &quot;1990-01-24&quot;,
+    &quot;role&quot;: &quot;patient&quot;,
+    &quot;role_label&quot;: &quot;Пациент&quot;
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span></div></div><h2 id="g1">Специальности</h2><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/specialties</code><span class="role">все</span></div>
+<p>Список специальностей с количеством врачей.</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: 1,
+      &quot;name&quot;: &quot;Терапевт&quot;,
+      &quot;description&quot;: &quot;Первичный приём&quot;,
+      &quot;doctors_count&quot;: 3
+    }
+  ]
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="muted">—</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/specialties/{id}</code><span class="role">все</span></div>
+<p>Специальность с врачами.</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;Терапевт&quot;,
+    &quot;doctors&quot;: [
+      {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+        &quot;email&quot;: &quot;doctor@clinic.ru&quot;,
+        &quot;cabinet&quot;: &quot;101&quot;,
+        &quot;experience_years&quot;: 20,
+        &quot;description&quot;: &quot;Врач высшей категории&quot;,
+        &quot;specialties&quot;: [
+          {
+            &quot;id&quot;: 1,
+            &quot;name&quot;: &quot;Терапевт&quot;
+          },
+          {
+            &quot;id&quot;: 3,
+            &quot;name&quot;: &quot;Кардиолог&quot;
+          }
+        ]
+      }
+    ]
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">404 Запись не найдена</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/specialties</code><span class="role">admin</span></div>
+<p>Создать специальность.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;name&quot;: &quot;Педиатр&quot;,
+  &quot;description&quot;: &quot;Приём детей&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 201</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 9,
+    &quot;name&quot;: &quot;Педиатр&quot;,
+    &quot;description&quot;: &quot;Приём детей&quot;
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#ef6c00">PUT</span><code>/api/v1/specialties/{id}</code><span class="role">admin</span></div>
+<p>Изменить специальность.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;name&quot;: &quot;Педиатр (детский врач)&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 9,
+    &quot;name&quot;: &quot;Педиатр (детский врач)&quot;
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#c62828">DELETE</span><code>/api/v1/specialties/{id}</code><span class="role">admin</span></div>
+<p>Удалить специальность.</p><div class="cols"><div></div><div><div class="lbl">Ответ — 204 No Content</div></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span></div></div><h2 id="g2">Врачи</h2><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/doctors</code><span class="role">все</span></div>
+<p>Список врачей. Параметры: search, specialty_id, experience_min, sort (name|experience_years|cabinet|id), order (asc|desc), page, per_page (≤50).</p><div class="cols"><div><div class="lbl">Параметры строки запроса</div><pre>/doctors?search=ов&amp;specialty_id=1&amp;sort=experience_years&amp;order=desc&amp;per_page=3&amp;page=1</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: 1,
+      &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+      &quot;email&quot;: &quot;doctor@clinic.ru&quot;,
+      &quot;cabinet&quot;: &quot;101&quot;,
+      &quot;experience_years&quot;: 20,
+      &quot;description&quot;: &quot;Врач высшей категории&quot;,
+      &quot;specialties&quot;: [
+        {
+          &quot;id&quot;: 1,
+          &quot;name&quot;: &quot;Терапевт&quot;
+        },
+        {
+          &quot;id&quot;: 3,
+          &quot;name&quot;: &quot;Кардиолог&quot;
+        }
+      ]
+    }
+  ],
+  &quot;links&quot;: {
+    &quot;first&quot;: &quot;...page=1&quot;,
+    &quot;next&quot;: &quot;...page=2&quot;
+  },
+  &quot;meta&quot;: {
+    &quot;current_page&quot;: 1,
+    &quot;last_page&quot;: 3,
+    &quot;per_page&quot;: 3,
+    &quot;total&quot;: 8
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/doctors/{id}</code><span class="role">все</span></div>
+<p>Врач со специальностями и графиком.</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+    &quot;email&quot;: &quot;doctor@clinic.ru&quot;,
+    &quot;cabinet&quot;: &quot;101&quot;,
+    &quot;experience_years&quot;: 20,
+    &quot;description&quot;: &quot;Врач высшей категории&quot;,
+    &quot;specialties&quot;: [
+      {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Терапевт&quot;
+      },
+      {
+        &quot;id&quot;: 3,
+        &quot;name&quot;: &quot;Кардиолог&quot;
+      }
+    ]
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">404 Запись не найдена</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/doctors/{id}/slots</code><span class="role">все</span></div>
+<p>Свободное время врача на дату (по графику минус занятые записи).</p><div class="cols"><div><div class="lbl">Параметры строки запроса</div><pre>/doctors/{id}/slots?date=2026-11-18</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;doctor_id&quot;: 1,
+  &quot;date&quot;: &quot;2026-11-18&quot;,
+  &quot;works&quot;: true,
+  &quot;free_slots&quot;: [
+    &quot;08:00&quot;,
+    &quot;08:30&quot;,
+    &quot;09:00&quot;
+  ],
+  &quot;free_count&quot;: 3
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">404 Запись не найдена</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/doctors</code><span class="role">admin</span></div>
+<p>Создать врача: учётная запись + профиль + специальности (транзакция).</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;name&quot;: &quot;Кузнецов Андрей&quot;,
+  &quot;email&quot;: &quot;kuznecov@clinic.ru&quot;,
+  &quot;password&quot;: &quot;password123&quot;,
+  &quot;cabinet&quot;: &quot;204&quot;,
+  &quot;experience_years&quot;: 7,
+  &quot;specialty_ids&quot;: [
+    2,
+    4
+  ]
+}</pre></div><div><div class="lbl">Пример ответа — 201</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+    &quot;email&quot;: &quot;doctor@clinic.ru&quot;,
+    &quot;cabinet&quot;: &quot;101&quot;,
+    &quot;experience_years&quot;: 20,
+    &quot;description&quot;: &quot;Врач высшей категории&quot;,
+    &quot;specialties&quot;: [
+      {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Терапевт&quot;
+      },
+      {
+        &quot;id&quot;: 3,
+        &quot;name&quot;: &quot;Кардиолог&quot;
+      }
+    ]
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#8e24aa">PATCH</span><code>/api/v1/doctors/{id}</code><span class="role">admin</span></div>
+<p>Изменить врача (частично), sync специальностей.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;cabinet&quot;: &quot;210&quot;,
+  &quot;specialty_ids&quot;: [
+    2
+  ]
+}</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+    &quot;email&quot;: &quot;doctor@clinic.ru&quot;,
+    &quot;cabinet&quot;: &quot;101&quot;,
+    &quot;experience_years&quot;: 20,
+    &quot;description&quot;: &quot;Врач высшей категории&quot;,
+    &quot;specialties&quot;: [
+      {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Терапевт&quot;
+      },
+      {
+        &quot;id&quot;: 3,
+        &quot;name&quot;: &quot;Кардиолог&quot;
+      }
+    ]
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#c62828">DELETE</span><code>/api/v1/doctors/{id}</code><span class="role">admin</span></div>
+<p>Удалить врача. Нельзя, если есть записи на приём.</p><div class="cols"><div></div><div><div class="lbl">Ответ — 204 No Content</div></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">409 Нарушение бизнес-правила</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/doctors/{id}/specialties</code><span class="role">admin</span></div>
+<p>Добавить врачу специальность (attach).</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;specialty_id&quot;: 5
+}</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+    &quot;email&quot;: &quot;doctor@clinic.ru&quot;,
+    &quot;cabinet&quot;: &quot;101&quot;,
+    &quot;experience_years&quot;: 20,
+    &quot;description&quot;: &quot;Врач высшей категории&quot;,
+    &quot;specialties&quot;: [
+      {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Терапевт&quot;
+      },
+      {
+        &quot;id&quot;: 3,
+        &quot;name&quot;: &quot;Кардиолог&quot;
+      }
+    ]
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#c62828">DELETE</span><code>/api/v1/doctors/{id}/specialties/{specialty}</code><span class="role">admin</span></div>
+<p>Убрать специальность у врача (detach).</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+    &quot;email&quot;: &quot;doctor@clinic.ru&quot;,
+    &quot;cabinet&quot;: &quot;101&quot;,
+    &quot;experience_years&quot;: 20,
+    &quot;description&quot;: &quot;Врач высшей категории&quot;,
+    &quot;specialties&quot;: [
+      {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Терапевт&quot;
+      },
+      {
+        &quot;id&quot;: 3,
+        &quot;name&quot;: &quot;Кардиолог&quot;
+      }
+    ]
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span></div></div><h2 id="g3">График работы</h2><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/doctors/{id}/schedules</code><span class="role">все</span></div>
+<p>График работы врача по дням недели.</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: 1,
+      &quot;weekday&quot;: 1,
+      &quot;weekday_name&quot;: &quot;Понедельник&quot;,
+      &quot;start_time&quot;: &quot;09:00&quot;,
+      &quot;end_time&quot;: &quot;14:00&quot;,
+      &quot;slot_minutes&quot;: 30
+    }
+  ]
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">404 Запись не найдена</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/doctors/{id}/schedules</code><span class="role">admin</span></div>
+<p>Добавить рабочий день.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;weekday&quot;: 6,
+  &quot;start_time&quot;: &quot;09:00&quot;,
+  &quot;end_time&quot;: &quot;13:00&quot;,
+  &quot;slot_minutes&quot;: 30
+}</pre></div><div><div class="lbl">Пример ответа — 201</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 25,
+    &quot;weekday&quot;: 6,
+    &quot;weekday_name&quot;: &quot;Суббота&quot;
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#ef6c00">PUT</span><code>/api/v1/schedules/{id}</code><span class="role">admin</span></div>
+<p>Изменить рабочий день.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;start_time&quot;: &quot;08:00&quot;,
+  &quot;end_time&quot;: &quot;12:00&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 25
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#c62828">DELETE</span><code>/api/v1/schedules/{id}</code><span class="role">admin</span></div>
+<p>Удалить рабочий день.</p><div class="cols"><div></div><div><div class="lbl">Ответ — 204 No Content</div></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span></div></div><h2 id="g4">Записи на приём</h2><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/appointments</code><span class="role">любая</span></div>
+<p>Записи: пациент — свои, врач — к себе, admin — все. Параметры: status, doctor_id, date_from, date_to, sort (date|created_at), order, page, per_page.</p><div class="cols"><div><div class="lbl">Параметры строки запроса</div><pre>/appointments?status=scheduled&amp;date_from=2026-11-01&amp;date_to=2026-11-30&amp;per_page=5</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: 34,
+      &quot;date&quot;: &quot;2026-11-18&quot;,
+      &quot;time&quot;: &quot;10:00&quot;,
+      &quot;status&quot;: &quot;scheduled&quot;,
+      &quot;status_label&quot;: &quot;Запланирован&quot;,
+      &quot;reason&quot;: &quot;Плановый осмотр&quot;,
+      &quot;patient&quot;: {
+        &quot;id&quot;: 2,
+        &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;
+      },
+      &quot;doctor&quot;: {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+        &quot;cabinet&quot;: &quot;101&quot;
+      }
+    }
+  ],
+  &quot;links&quot;: {},
+  &quot;meta&quot;: {
+    &quot;current_page&quot;: 1,
+    &quot;last_page&quot;: 3,
+    &quot;per_page&quot;: 3,
+    &quot;total&quot;: 8
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/appointments</code><span class="role">patient, admin</span></div>
+<p>КЛЮЧЕВОЙ СЦЕНАРИЙ: запись на приём. Проверки: дата в будущем, врач работает в этот день, время в графике и кратно slot_minutes, время свободно, у пациента нет записи на это время и к этому врачу в этот день. Транзакция + lockForUpdate.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;doctor_id&quot;: 1,
+  &quot;date&quot;: &quot;2026-11-18&quot;,
+  &quot;time&quot;: &quot;10:00&quot;,
+  &quot;reason&quot;: &quot;Плановый осмотр&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 201</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 34,
+    &quot;date&quot;: &quot;2026-11-18&quot;,
+    &quot;time&quot;: &quot;10:00&quot;,
+    &quot;status&quot;: &quot;scheduled&quot;,
+    &quot;status_label&quot;: &quot;Запланирован&quot;,
+    &quot;reason&quot;: &quot;Плановый осмотр&quot;,
+    &quot;patient&quot;: {
+      &quot;id&quot;: 2,
+      &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;
+    },
+    &quot;doctor&quot;: {
+      &quot;id&quot;: 1,
+      &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+      &quot;cabinet&quot;: &quot;101&quot;
+    }
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">409 Нарушение бизнес-правила</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/appointments/{id}</code><span class="role">владелец, врач приёма, admin</span></div>
+<p>Запись на приём с медкнижкой.</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 34,
+    &quot;date&quot;: &quot;2026-11-18&quot;,
+    &quot;time&quot;: &quot;10:00&quot;,
+    &quot;status&quot;: &quot;scheduled&quot;,
+    &quot;status_label&quot;: &quot;Запланирован&quot;,
+    &quot;reason&quot;: &quot;Плановый осмотр&quot;,
+    &quot;patient&quot;: {
+      &quot;id&quot;: 2,
+      &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;
+    },
+    &quot;doctor&quot;: {
+      &quot;id&quot;: 1,
+      &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+      &quot;cabinet&quot;: &quot;101&quot;
+    }
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/appointments/{id}/cancel</code><span class="role">пациент-владелец, admin</span></div>
+<p>Отмена записи (не позднее чем за 2 часа до приёма).</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 34,
+    &quot;date&quot;: &quot;2026-11-18&quot;,
+    &quot;time&quot;: &quot;10:00&quot;,
+    &quot;status&quot;: &quot;cancelled&quot;,
+    &quot;status_label&quot;: &quot;Отменён&quot;,
+    &quot;reason&quot;: &quot;Плановый осмотр&quot;,
+    &quot;patient&quot;: {
+      &quot;id&quot;: 2,
+      &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;
+    },
+    &quot;doctor&quot;: {
+      &quot;id&quot;: 1,
+      &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+      &quot;cabinet&quot;: &quot;101&quot;
+    }
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">409 Нарушение бизнес-правила</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#8e24aa">PATCH</span><code>/api/v1/appointments/{id}/status</code><span class="role">doctor (свой приём), admin</span></div>
+<p>Смена статуса: scheduled → completed | no_show | cancelled.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;status&quot;: &quot;completed&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 34,
+    &quot;date&quot;: &quot;2026-11-18&quot;,
+    &quot;time&quot;: &quot;10:00&quot;,
+    &quot;status&quot;: &quot;completed&quot;,
+    &quot;status_label&quot;: &quot;Завершён&quot;,
+    &quot;reason&quot;: &quot;Плановый осмотр&quot;,
+    &quot;patient&quot;: {
+      &quot;id&quot;: 2,
+      &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;
+    },
+    &quot;doctor&quot;: {
+      &quot;id&quot;: 1,
+      &quot;name&quot;: &quot;Иванов Сергей Петрович&quot;,
+      &quot;cabinet&quot;: &quot;101&quot;
+    }
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">409 Нарушение бизнес-правила</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#c62828">DELETE</span><code>/api/v1/appointments/{id}</code><span class="role">admin</span></div>
+<p>Удалить запись (нельзя, если есть запись в медкнижке).</p><div class="cols"><div></div><div><div class="lbl">Ответ — 204 No Content</div></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">409 Нарушение бизнес-правила</span></div></div><h2 id="g5">Медкнижка</h2><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/medical-records</code><span class="role">любая</span></div>
+<p>Медкнижка: пациент — своя, врач — по своим приёмам (?patient_id=), admin — все.</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: 1,
+      &quot;appointment_id&quot;: 3,
+      &quot;diagnosis&quot;: &quot;ОРВИ&quot;,
+      &quot;examination&quot;: &quot;Температура 37,6&quot;,
+      &quot;prescription&quot;: &quot;Покой&quot;
+    }
+  ]
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/appointments/{id}/medical-record</code><span class="role">doctor (свой приём), admin</span></div>
+<p>Внести запись по завершённому приёму (одна на приём).</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;diagnosis&quot;: &quot;ОРВИ&quot;,
+  &quot;examination&quot;: &quot;Температура 37,6&quot;,
+  &quot;prescription&quot;: &quot;Обильное питьё&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 201</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 6,
+    &quot;appointment_id&quot;: 4,
+    &quot;diagnosis&quot;: &quot;ОРВИ&quot;
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">409 Нарушение бизнес-правила</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/medical-records/{id}</code><span class="role">владелец, врач, admin</span></div>
+<p>Запись медкнижки.</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 6,
+    &quot;diagnosis&quot;: &quot;ОРВИ&quot;
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#8e24aa">PATCH</span><code>/api/v1/medical-records/{id}</code><span class="role">doctor (свой приём), admin</span></div>
+<p>Изменить запись медкнижки.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;prescription&quot;: &quot;Покой 5 дней&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 6
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">422 Ошибка валидации</span></div></div><h2 id="g6">Администрирование</h2><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/users</code><span class="role">admin</span></div>
+<p>Пользователи с количеством записей. ?role=</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: 2,
+      &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;,
+      &quot;email&quot;: &quot;patient@clinic.ru&quot;,
+      &quot;phone&quot;: &quot;+77011111111&quot;,
+      &quot;birth_date&quot;: &quot;1990-01-24&quot;,
+      &quot;role&quot;: &quot;patient&quot;,
+      &quot;role_label&quot;: &quot;Пациент&quot;,
+      &quot;appointments_count&quot;: 3
+    }
+  ],
+  &quot;meta&quot;: {
+    &quot;current_page&quot;: 1,
+    &quot;last_page&quot;: 3,
+    &quot;per_page&quot;: 3,
+    &quot;total&quot;: 8
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#8e24aa">PATCH</span><code>/api/v1/users/{id}/role</code><span class="role">admin</span></div>
+<p>Сменить роль пользователя.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
+  &quot;role&quot;: &quot;doctor&quot;
+}</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;id&quot;: 2,
+    &quot;name&quot;: &quot;Смирнов Алексей Петрович&quot;,
+    &quot;email&quot;: &quot;patient@clinic.ru&quot;,
+    &quot;phone&quot;: &quot;+77011111111&quot;,
+    &quot;birth_date&quot;: &quot;1990-01-24&quot;,
+    &quot;role&quot;: &quot;doctor&quot;,
+    &quot;role_label&quot;: &quot;Пациент&quot;
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#c62828">DELETE</span><code>/api/v1/users/{id}</code><span class="role">admin</span></div>
+<p>Удалить пользователя (нельзя при наличии записей).</p><div class="cols"><div></div><div><div class="lbl">Ответ — 204 No Content</div></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span><span class="err">409 Нарушение бизнес-правила</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/stats/appointments</code><span class="role">admin</span></div>
+<p>Статистика за период: по статусам, по врачам, популярные специальности.</p><div class="cols"><div><div class="lbl">Параметры строки запроса</div><pre>/stats/appointments?from=2026-11-01&amp;to=2026-11-30</pre></div><div><div class="lbl">Пример ответа — 200</div><pre>{
+  &quot;data&quot;: {
+    &quot;total&quot;: 34,
+    &quot;completed_percent&quot;: 17.6,
+    &quot;by_status&quot;: [
+      {
+        &quot;status&quot;: &quot;scheduled&quot;,
+        &quot;label&quot;: &quot;Запланирован&quot;,
+        &quot;total&quot;: 16
+      }
+    ],
+    &quot;by_doctor&quot;: [
+      {
+        &quot;doctor&quot;: &quot;Иванов С. П.&quot;,
+        &quot;total&quot;: 8
+      }
+    ],
+    &quot;top_specialties&quot;: [
+      {
+        &quot;name&quot;: &quot;Терапевт&quot;,
+        &quot;total&quot;: 20
+      }
+    ]
+  }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">422 Ошибка валидации</span></div></div></main></body></html>

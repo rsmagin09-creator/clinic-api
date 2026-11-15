@@ -10,6 +10,7 @@ use App\Models\MedicalRecord;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MedicalRecordService
 {
@@ -47,7 +48,10 @@ class MedicalRecordService
                 throw new BusinessException('Запись в медкнижке по этому приёму уже существует');
             }
 
-            return $appointment->medicalRecord()->create($data)->load('appointment.doctor.user');
+            $record = $appointment->medicalRecord()->create($data);
+            Log::info('Внесена запись в медкнижку', ['record_id' => $record->id, 'appointment_id' => $appointment->id]);
+
+            return $record->load('appointment.doctor.user');
         });
     }
 

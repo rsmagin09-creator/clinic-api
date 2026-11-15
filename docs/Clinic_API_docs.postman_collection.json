@@ -1,0 +1,2777 @@
+{
+  "info": {
+    "name": "Clinic API — документация",
+    "description": "REST API записи в поликлинику (Laravel 13 + Sanctum). Базовый адрес {{base_url}} = http://127.0.0.1:8000/api/v1. Авторизация Bearer {{token}} (сохраняется автоматически после /login). Тестовые пользователи: admin@clinic.ru, doctor@clinic.ru, patient@clinic.ru, пароль password.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Аутентификация",
+      "item": [
+        {
+          "name": "POST /register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/register",
+            "description": "Регистрация пациента. Возвращает пользователя и токен.\n\n**Доступ:** гость\n\n**Успешный ответ:** 201\n\n**Ошибки:** 422 — Ошибка валидации",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Иванова Мария\",\n  \"email\": \"ivanova@mail.ru\",\n  \"phone\": \"+77019998877\",\n  \"birth_date\": \"1995-04-12\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/register"
+              },
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"user\": {\n    \"id\": 2,\n    \"name\": \"Смирнов Алексей Петрович\",\n    \"email\": \"patient@clinic.ru\",\n    \"phone\": \"+77011111111\",\n    \"birth_date\": \"1990-01-24\",\n    \"role\": \"patient\",\n    \"role_label\": \"Пациент\"\n  },\n  \"token\": \"1|YBRDAmbb4nEmGQvXPBL...\",\n  \"token_type\": \"Bearer\"\n}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/register"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST /login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/login",
+            "description": "Вход по email и паролю, выдача Bearer-токена (живёт 24 ч).\n\n**Доступ:** гость\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 422 — Ошибка валидации",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient@clinic.ru\",\n  \"password\": \"password\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/login"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"user\": {\n    \"id\": 2,\n    \"name\": \"Смирнов Алексей Петрович\",\n    \"email\": \"patient@clinic.ru\",\n    \"phone\": \"+77011111111\",\n    \"birth_date\": \"1990-01-24\",\n    \"role\": \"patient\",\n    \"role_label\": \"Пациент\"\n  },\n  \"token\": \"2|pLN2ZoEdlmMBWuxn...\",\n  \"token_type\": \"Bearer\",\n  \"expires_in_minutes\": 1440\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/login"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/login"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) pm.collectionVariables.set('token', pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/logout",
+            "description": "Выход: удаление текущего токена.\n\n**Доступ:** любая\n\n**Успешный ответ:** 204\n\n**Ошибки:** 401 — Требуется авторизация"
+          },
+          "response": [
+            {
+              "name": "204",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/logout"
+              },
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/logout"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            }
+          ]
+        },
+        {
+          "name": "GET /user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/user",
+            "description": "Данные текущего пользователя.\n\n**Доступ:** любая\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/user"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"Смирнов Алексей Петрович\",\n    \"email\": \"patient@clinic.ru\",\n    \"phone\": \"+77011111111\",\n    \"birth_date\": \"1990-01-24\",\n    \"role\": \"patient\",\n    \"role_label\": \"Пациент\"\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/user"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Специальности",
+      "item": [
+        {
+          "name": "GET /specialties",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties",
+            "description": "Список специальностей с количеством врачей.\n\n**Доступ:** все\n\n**Успешный ответ:** 200\n\n**Ошибки:** —"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/specialties"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Терапевт\",\n      \"description\": \"Первичный приём\",\n      \"doctors_count\": 3\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /specialties/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties/1",
+            "description": "Специальность с врачами.\n\n**Доступ:** все\n\n**Успешный ответ:** 200\n\n**Ошибки:** 404 — Запись не найдена"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Терапевт\",\n    \"doctors\": [\n      {\n        \"id\": 1,\n        \"name\": \"Иванов Сергей Петрович\",\n        \"email\": \"doctor@clinic.ru\",\n        \"cabinet\": \"101\",\n        \"experience_years\": 20,\n        \"description\": \"Врач высшей категории\",\n        \"specialties\": [\n          {\n            \"id\": 1,\n            \"name\": \"Терапевт\"\n          },\n          {\n            \"id\": 3,\n            \"name\": \"Кардиолог\"\n          }\n        ]\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST /specialties",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties",
+            "description": "Создать специальность.\n\n**Доступ:** admin\n\n**Успешный ответ:** 201\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Педиатр\",\n  \"description\": \"Приём детей\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/specialties"
+              },
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 9,\n    \"name\": \"Педиатр\",\n    \"description\": \"Приём детей\"\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/specialties"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/specialties"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/specialties"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /specialties/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties/1",
+            "description": "Изменить специальность.\n\n**Доступ:** admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Педиатр (детский врач)\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 9,\n    \"name\": \"Педиатр (детский врач)\"\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /specialties/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/specialties/1",
+            "description": "Удалить специальность.\n\n**Доступ:** admin\n\n**Успешный ответ:** 204\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена"
+          },
+          "response": [
+            {
+              "name": "204",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/specialties/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Врачи",
+      "item": [
+        {
+          "name": "GET /doctors",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors?search=ов&specialty_id=1&sort=experience_years&order=desc&per_page=3&page=1",
+            "description": "Список врачей. Параметры: search, specialty_id, experience_min, sort (name|experience_years|cabinet|id), order (asc|desc), page, per_page (≤50).\n\n**Доступ:** все\n\n**Успешный ответ:** 200\n\n**Ошибки:** 422 — Ошибка валидации"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/doctors?search=ов&specialty_id=1&sort=experience_years&order=desc&per_page=3&page=1"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Иванов Сергей Петрович\",\n      \"email\": \"doctor@clinic.ru\",\n      \"cabinet\": \"101\",\n      \"experience_years\": 20,\n      \"description\": \"Врач высшей категории\",\n      \"specialties\": [\n        {\n          \"id\": 1,\n          \"name\": \"Терапевт\"\n        },\n        {\n          \"id\": 3,\n          \"name\": \"Кардиолог\"\n        }\n      ]\n    }\n  ],\n  \"links\": {\n    \"first\": \"...page=1\",\n    \"next\": \"...page=2\"\n  },\n  \"meta\": {\n    \"current_page\": 1,\n    \"last_page\": 3,\n    \"per_page\": 3,\n    \"total\": 8\n  }\n}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/doctors?search=ов&specialty_id=1&sort=experience_years&order=desc&per_page=3&page=1"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "GET /doctors/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1",
+            "description": "Врач со специальностями и графиком.\n\n**Доступ:** все\n\n**Успешный ответ:** 200\n\n**Ошибки:** 404 — Запись не найдена"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Иванов Сергей Петрович\",\n    \"email\": \"doctor@clinic.ru\",\n    \"cabinet\": \"101\",\n    \"experience_years\": 20,\n    \"description\": \"Врач высшей категории\",\n    \"specialties\": [\n      {\n        \"id\": 1,\n        \"name\": \"Терапевт\"\n      },\n      {\n        \"id\": 3,\n        \"name\": \"Кардиолог\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            }
+          ]
+        },
+        {
+          "name": "GET /doctors/{id}/slots",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/slots?date=2026-11-18",
+            "description": "Свободное время врача на дату (по графику минус занятые записи).\n\n**Доступ:** все\n\n**Успешный ответ:** 200\n\n**Ошибки:** 404 — Запись не найдена, 422 — Ошибка валидации"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/doctors/1/slots?date=2026-11-18"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"doctor_id\": 1,\n  \"date\": \"2026-11-18\",\n  \"works\": true,\n  \"free_slots\": [\n    \"08:00\",\n    \"08:30\",\n    \"09:00\"\n  ],\n  \"free_count\": 3\n}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/doctors/1/slots?date=2026-11-18"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/doctors/1/slots?date=2026-11-18"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST /doctors",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors",
+            "description": "Создать врача: учётная запись + профиль + специальности (транзакция).\n\n**Доступ:** admin\n\n**Успешный ответ:** 201\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Кузнецов Андрей\",\n  \"email\": \"kuznecov@clinic.ru\",\n  \"password\": \"password123\",\n  \"cabinet\": \"204\",\n  \"experience_years\": 7,\n  \"specialty_ids\": [\n    2,\n    4\n  ]\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors"
+              },
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Иванов Сергей Петрович\",\n    \"email\": \"doctor@clinic.ru\",\n    \"cabinet\": \"101\",\n    \"experience_years\": 20,\n    \"description\": \"Врач высшей категории\",\n    \"specialties\": [\n      {\n        \"id\": 1,\n        \"name\": \"Терапевт\"\n      },\n      {\n        \"id\": 3,\n        \"name\": \"Кардиолог\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /doctors/{id}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1",
+            "description": "Изменить врача (частично), sync специальностей.\n\n**Доступ:** admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cabinet\": \"210\",\n  \"specialty_ids\": [\n    2\n  ]\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Иванов Сергей Петрович\",\n    \"email\": \"doctor@clinic.ru\",\n    \"cabinet\": \"101\",\n    \"experience_years\": 20,\n    \"description\": \"Врач высшей категории\",\n    \"specialties\": [\n      {\n        \"id\": 1,\n        \"name\": \"Терапевт\"\n      },\n      {\n        \"id\": 3,\n        \"name\": \"Кардиолог\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /doctors/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1",
+            "description": "Удалить врача. Нельзя, если есть записи на приём.\n\n**Доступ:** admin\n\n**Успешный ответ:** 204\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 409 — Нарушение бизнес-правила"
+          },
+          "response": [
+            {
+              "name": "204",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "409",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/doctors/1"
+              },
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Нарушение бизнес-правила\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST /doctors/{id}/specialties",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/specialties",
+            "description": "Добавить врачу специальность (attach).\n\n**Доступ:** admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"specialty_id\": 5\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/specialties"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Иванов Сергей Петрович\",\n    \"email\": \"doctor@clinic.ru\",\n    \"cabinet\": \"101\",\n    \"experience_years\": 20,\n    \"description\": \"Врач высшей категории\",\n    \"specialties\": [\n      {\n        \"id\": 1,\n        \"name\": \"Терапевт\"\n      },\n      {\n        \"id\": 3,\n        \"name\": \"Кардиолог\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/specialties"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/specialties"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/specialties"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/specialties"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /doctors/{id}/specialties/{specialty}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/specialties/5",
+            "description": "Убрать специальность у врача (detach).\n\n**Доступ:** admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/doctors/1/specialties/5"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Иванов Сергей Петрович\",\n    \"email\": \"doctor@clinic.ru\",\n    \"cabinet\": \"101\",\n    \"experience_years\": 20,\n    \"description\": \"Врач высшей категории\",\n    \"specialties\": [\n      {\n        \"id\": 1,\n        \"name\": \"Терапевт\"\n      },\n      {\n        \"id\": 3,\n        \"name\": \"Кардиолог\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/doctors/1/specialties/5"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/doctors/1/specialties/5"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/doctors/1/specialties/5"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "График работы",
+      "item": [
+        {
+          "name": "GET /doctors/{id}/schedules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/schedules",
+            "description": "График работы врача по дням недели.\n\n**Доступ:** все\n\n**Успешный ответ:** 200\n\n**Ошибки:** 404 — Запись не найдена"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/doctors/1/schedules"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"weekday\": 1,\n      \"weekday_name\": \"Понедельник\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"14:00\",\n      \"slot_minutes\": 30\n    }\n  ]\n}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/doctors/1/schedules"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST /doctors/{id}/schedules",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/doctors/1/schedules",
+            "description": "Добавить рабочий день.\n\n**Доступ:** admin\n\n**Успешный ответ:** 201\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weekday\": 6,\n  \"start_time\": \"09:00\",\n  \"end_time\": \"13:00\",\n  \"slot_minutes\": 30\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/schedules"
+              },
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 25,\n    \"weekday\": 6,\n    \"weekday_name\": \"Суббота\"\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/schedules"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/schedules"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/schedules"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/doctors/1/schedules"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /schedules/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/schedules/1",
+            "description": "Изменить рабочий день.\n\n**Доступ:** admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_time\": \"08:00\",\n  \"end_time\": \"12:00\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/schedules/1"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 25\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/schedules/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/schedules/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/schedules/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/schedules/1"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /schedules/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/schedules/1",
+            "description": "Удалить рабочий день.\n\n**Доступ:** admin\n\n**Успешный ответ:** 204\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена"
+          },
+          "response": [
+            {
+              "name": "204",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/schedules/1"
+              },
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/schedules/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/schedules/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/schedules/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Записи на приём",
+      "item": [
+        {
+          "name": "GET /appointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments?status=scheduled&date_from=2026-11-01&date_to=2026-11-30&per_page=5",
+            "description": "Записи: пациент — свои, врач — к себе, admin — все. Параметры: status, doctor_id, date_from, date_to, sort (date|created_at), order, page, per_page.\n\n**Доступ:** любая\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 422 — Ошибка валидации"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/appointments?status=scheduled&date_from=2026-11-01&date_to=2026-11-30&per_page=5"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 34,\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:00\",\n      \"status\": \"scheduled\",\n      \"status_label\": \"Запланирован\",\n      \"reason\": \"Плановый осмотр\",\n      \"patient\": {\n        \"id\": 2,\n        \"name\": \"Смирнов Алексей Петрович\"\n      },\n      \"doctor\": {\n        \"id\": 1,\n        \"name\": \"Иванов Сергей Петрович\",\n        \"cabinet\": \"101\"\n      }\n    }\n  ],\n  \"links\": {},\n  \"meta\": {\n    \"current_page\": 1,\n    \"last_page\": 3,\n    \"per_page\": 3,\n    \"total\": 8\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/appointments?status=scheduled&date_from=2026-11-01&date_to=2026-11-30&per_page=5"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/appointments?status=scheduled&date_from=2026-11-01&date_to=2026-11-30&per_page=5"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST /appointments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments",
+            "description": "КЛЮЧЕВОЙ СЦЕНАРИЙ: запись на приём. Проверки: дата в будущем, врач работает в этот день, время в графике и кратно slot_minutes, время свободно, у пациента нет записи на это время и к этому врачу в этот день. Транзакция + lockForUpdate.\n\n**Доступ:** patient, admin\n\n**Успешный ответ:** 201\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 409 — Нарушение бизнес-правила, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": 1,\n  \"date\": \"2026-11-18\",\n  \"time\": \"10:00\",\n  \"reason\": \"Плановый осмотр\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments"
+              },
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 34,\n    \"date\": \"2026-11-18\",\n    \"time\": \"10:00\",\n    \"status\": \"scheduled\",\n    \"status_label\": \"Запланирован\",\n    \"reason\": \"Плановый осмотр\",\n    \"patient\": {\n      \"id\": 2,\n      \"name\": \"Смирнов Алексей Петрович\"\n    },\n    \"doctor\": {\n      \"id\": 1,\n      \"name\": \"Иванов Сергей Петрович\",\n      \"cabinet\": \"101\"\n    }\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "409",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments"
+              },
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Нарушение бизнес-правила\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "GET /appointments/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/1",
+            "description": "Запись на приём с медкнижкой.\n\n**Доступ:** владелец, врач приёма, admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/appointments/1"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 34,\n    \"date\": \"2026-11-18\",\n    \"time\": \"10:00\",\n    \"status\": \"scheduled\",\n    \"status_label\": \"Запланирован\",\n    \"reason\": \"Плановый осмотр\",\n    \"patient\": {\n      \"id\": 2,\n      \"name\": \"Смирнов Алексей Петрович\"\n    },\n    \"doctor\": {\n      \"id\": 1,\n      \"name\": \"Иванов Сергей Петрович\",\n      \"cabinet\": \"101\"\n    }\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/appointments/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/appointments/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/appointments/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST /appointments/{id}/cancel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/1/cancel",
+            "description": "Отмена записи (не позднее чем за 2 часа до приёма).\n\n**Доступ:** пациент-владелец, admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 409 — Нарушение бизнес-правила"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/cancel"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 34,\n    \"date\": \"2026-11-18\",\n    \"time\": \"10:00\",\n    \"status\": \"cancelled\",\n    \"status_label\": \"Отменён\",\n    \"reason\": \"Плановый осмотр\",\n    \"patient\": {\n      \"id\": 2,\n      \"name\": \"Смирнов Алексей Петрович\"\n    },\n    \"doctor\": {\n      \"id\": 1,\n      \"name\": \"Иванов Сергей Петрович\",\n      \"cabinet\": \"101\"\n    }\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/cancel"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/cancel"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/cancel"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "409",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/cancel"
+              },
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Нарушение бизнес-правила\"}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /appointments/{id}/status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/1/status",
+            "description": "Смена статуса: scheduled → completed | no_show | cancelled.\n\n**Доступ:** doctor (свой приём), admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 409 — Нарушение бизнес-правила, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/appointments/1/status"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 34,\n    \"date\": \"2026-11-18\",\n    \"time\": \"10:00\",\n    \"status\": \"completed\",\n    \"status_label\": \"Завершён\",\n    \"reason\": \"Плановый осмотр\",\n    \"patient\": {\n      \"id\": 2,\n      \"name\": \"Смирнов Алексей Петрович\"\n    },\n    \"doctor\": {\n      \"id\": 1,\n      \"name\": \"Иванов Сергей Петрович\",\n      \"cabinet\": \"101\"\n    }\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/appointments/1/status"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/appointments/1/status"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/appointments/1/status"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "409",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/appointments/1/status"
+              },
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Нарушение бизнес-правила\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/appointments/1/status"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /appointments/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/1",
+            "description": "Удалить запись (нельзя, если есть запись в медкнижке).\n\n**Доступ:** admin\n\n**Успешный ответ:** 204\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 409 — Нарушение бизнес-правила"
+          },
+          "response": [
+            {
+              "name": "204",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/appointments/1"
+              },
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/appointments/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/appointments/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/appointments/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "409",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/appointments/1"
+              },
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Нарушение бизнес-правила\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Медкнижка",
+      "item": [
+        {
+          "name": "GET /medical-records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/medical-records",
+            "description": "Медкнижка: пациент — своя, врач — по своим приёмам (?patient_id=), admin — все.\n\n**Доступ:** любая\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 422 — Ошибка валидации"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/medical-records"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"appointment_id\": 3,\n      \"diagnosis\": \"ОРВИ\",\n      \"examination\": \"Температура 37,6\",\n      \"prescription\": \"Покой\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/medical-records"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/medical-records"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST /appointments/{id}/medical-record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/appointments/1/medical-record",
+            "description": "Внести запись по завершённому приёму (одна на приём).\n\n**Доступ:** doctor (свой приём), admin\n\n**Успешный ответ:** 201\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 409 — Нарушение бизнес-правила, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosis\": \"ОРВИ\",\n  \"examination\": \"Температура 37,6\",\n  \"prescription\": \"Обильное питьё\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/medical-record"
+              },
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 6,\n    \"appointment_id\": 4,\n    \"diagnosis\": \"ОРВИ\"\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/medical-record"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/medical-record"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/medical-record"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "409",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/medical-record"
+              },
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Нарушение бизнес-правила\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/appointments/1/medical-record"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "GET /medical-records/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/medical-records/1",
+            "description": "Запись медкнижки.\n\n**Доступ:** владелец, врач, admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/medical-records/1"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 6,\n    \"diagnosis\": \"ОРВИ\"\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/medical-records/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/medical-records/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/medical-records/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /medical-records/{id}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/medical-records/1",
+            "description": "Изменить запись медкнижки.\n\n**Доступ:** doctor (свой приём), admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prescription\": \"Покой 5 дней\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/medical-records/1"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 6\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/medical-records/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/medical-records/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/medical-records/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/medical-records/1"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Администрирование",
+      "item": [
+        {
+          "name": "GET /users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/users",
+            "description": "Пользователи с количеством записей. ?role=\n\n**Доступ:** admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 422 — Ошибка валидации"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/users"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 2,\n      \"name\": \"Смирнов Алексей Петрович\",\n      \"email\": \"patient@clinic.ru\",\n      \"phone\": \"+77011111111\",\n      \"birth_date\": \"1990-01-24\",\n      \"role\": \"patient\",\n      \"role_label\": \"Пациент\",\n      \"appointments_count\": 3\n    }\n  ],\n  \"meta\": {\n    \"current_page\": 1,\n    \"last_page\": 3,\n    \"per_page\": 3,\n    \"total\": 8\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/users"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/users"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/users"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /users/{id}/role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/users/1/role",
+            "description": "Сменить роль пользователя.\n\n**Доступ:** admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 422 — Ошибка валидации",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"doctor\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/users/1/role"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"Смирнов Алексей Петрович\",\n    \"email\": \"patient@clinic.ru\",\n    \"phone\": \"+77011111111\",\n    \"birth_date\": \"1990-01-24\",\n    \"role\": \"doctor\",\n    \"role_label\": \"Пациент\"\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/users/1/role"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/users/1/role"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/users/1/role"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{base_url}}/users/1/role"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /users/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/users/1",
+            "description": "Удалить пользователя (нельзя при наличии записей).\n\n**Доступ:** admin\n\n**Успешный ответ:** 204\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 404 — Запись не найдена, 409 — Нарушение бизнес-правила"
+          },
+          "response": [
+            {
+              "name": "204",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/users/1"
+              },
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/users/1"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/users/1"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "404",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/users/1"
+              },
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Запись не найдена\"}"
+            },
+            {
+              "name": "409",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/users/1"
+              },
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Нарушение бизнес-правила\"}"
+            }
+          ]
+        },
+        {
+          "name": "GET /stats/appointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/stats/appointments?from=2026-11-01&to=2026-11-30",
+            "description": "Статистика за период: по статусам, по врачам, популярные специальности.\n\n**Доступ:** admin\n\n**Успешный ответ:** 200\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 422 — Ошибка валидации"
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/stats/appointments?from=2026-11-01&to=2026-11-30"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"total\": 34,\n    \"completed_percent\": 17.6,\n    \"by_status\": [\n      {\n        \"status\": \"scheduled\",\n        \"label\": \"Запланирован\",\n        \"total\": 16\n      }\n    ],\n    \"by_doctor\": [\n      {\n        \"doctor\": \"Иванов С. П.\",\n        \"total\": 8\n      }\n    ],\n    \"top_specialties\": [\n      {\n        \"name\": \"Терапевт\",\n        \"total\": 20\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "401",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/stats/appointments?from=2026-11-01&to=2026-11-30"
+              },
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Требуется авторизация\"}"
+            },
+            {
+              "name": "403",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/stats/appointments?from=2026-11-01&to=2026-11-30"
+              },
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Недостаточно прав\"}"
+            },
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/stats/appointments?from=2026-11-01&to=2026-11-30"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\"message\": \"Ошибка валидации\"}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

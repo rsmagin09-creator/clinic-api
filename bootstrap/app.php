@@ -29,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Псевдоним middleware проверки роли: ->middleware('role:admin')
+        // Журналирование каждого запроса к API
+        $middleware->api(append: [
+            \App\Http\Middleware\LogApiRequests::class,
+        ]);
+
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
         ]);
@@ -49,6 +54,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // 409 — нарушение бизнес-правила (BusinessException)
         $exceptions->render(function (BusinessException $e, Request $request) use ($isApi) {
             if ($isApi($request)) {
+                \Illuminate\Support\Facades\Log::warning('Нарушение бизнес-правила: '.$e->getMessage(), [
+                    'user_id' => $request->user()?->id, 'url' => $request->path(),
+                ]);
                 return response()->json(['message' => $e->getMessage()], 409);
             }
         });
