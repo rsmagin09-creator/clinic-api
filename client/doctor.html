@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Врач — Запись в поликлинику</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<header><div class="logo">🏥 Поликлиника</div><nav></nav><div id="user-box"></div></header>
+<main>
+  <div class="grid2">
+    <div class="card" id="doctor-card"><p class="muted">Загрузка…</p></div>
+    <div class="card">
+      <h2>Запись на приём</h2>
+      <div id="guest-note" hidden class="muted">Чтобы записаться, <a href="login.html">войдите</a> как пациент.</div>
+      <form id="book-form" data-role="patient" hidden novalidate>
+        <label>Дата приёма</label>
+        <input type="date" name="date" required>
+        <div class="field-error" data-error="date"></div>
+        <label>Свободное время</label>
+        <div class="slots" id="slots"><span class="muted">Выберите дату</span></div>
+        <input type="hidden" name="time" required>
+        <div class="field-error" data-error="time"></div>
+        <label>Причина обращения</label>
+        <input name="reason" maxlength="255" placeholder="Например: плановый осмотр">
+        <div class="field-error" data-error="reason"></div>
+        <div class="alert" hidden></div>
+        <button class="primary" type="submit">Записаться</button>
+      </form>
+    </div>
+  </div>
+</main>
+<script src="js/config.js"></script><script src="js/api.js"></script>
+<script>
+  const id = new URLSearchParams(location.search).get('id');
+  const form = document.getElementById('book-form');
+  let doctor = null;
+
+  async function loadDoctor() {
+    const res = await api('GET', '/doctors/' + id);
+    const card = document.getElementById('doctor-card');
+    if (!res.ok) { card.innerHTML = `<div class="alert">${esc(res.message)}</div>`; return; }
+    doctor = res.data.data;
+    card.innerHTML = `<h1>${esc(doctor.name)}</h1>
+      <div class="info-row"><b>Специальности</b><span>${doctor.specialties.map(s => `<span class="tag">${esc(s.name)}</span>`).join('')}</span></div>
+      <div class="info-row"><b>Кабинет</b><span>${esc(doctor.cabinet)}</span></div>
+      <div class="info-row"><b>Стаж</b><span>${doctor.experience_years} лет</span></div>
+      <div class="info-row"><b>О враче</b><span>${esc(doctor.description ?? '—')}</span></div>
+      <h2 style="margin-top:18px">График приёма</h2>
+      <table><thead><tr><th>День</th><th>Часы</th><th>Приём</th></tr></thead><tbody>
+      ${doctor.schedules.sort((a, b) => a.weekday - b.weekday).map(s => `<tr><td>${s.weekday_name}</td><td>${s.start_time}–${s.end_time}</td><td>${s.slot_minutes} мин</td></tr>`).join('') || '<tr><td colspan="3" class="muted">График не задан</td></tr>'}
+      </tbody></table>`;
+    // ближайший рабочий день
+    const days = doctor.schedules.map(s => s.weekday);
+    const d = new Date();
+    for (let i = 1; i <= 14; i++) {
+      d.setDate(d.getDate() + 1);
+      if (days.includes(((d.getDay() + 6) % 7) + 1)) break;
+    }
+    const pad = n => String(n).padStart(2, '0');
+    form.date.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const t = new Date(); t.setDate(t.getDate() + 30);
+    form.date.max = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+  }
+
+  async function loadSlots() {
+    form.time.value = '';
+    const box = document.getElementById('slots');
+    if (!form.date.value) { box.innerHTML = '<span class="muted">Выберите дату</span>'; return; }
+    const res = await api('GET', `/doctors/${id}/slots?date=${form.date.value}`);
+    if (!res.ok) { showErrors(form, res.errors, res.message); box.innerHTML = ''; return; }
+    showErrors(form, {});
+    if (!res.data.works) { box.innerHTML = '<span class="muted">Врач не принимает в этот день</span>'; return; }
+    if (!res.data.free_slots.length) { box.innerHTML = '<span class="muted">Свободного времени нет</span>'; return; }
+    box.innerHTML = res.data.free_slots.map(t => `<button type="button" class="slot" data-t="${t}">${t}</button>`).join('');
+    box.querySelectorAll('.slot').forEach(b => b.onclick = () => {
+      box.querySelectorAll('.slot').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected'); form.time.value = b.dataset.t;
+    });
+  }
+
+  form.date.onchange = loadSlots;
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    if (!checkRequired(form)) return;
+    const body = { doctor_id: +id, ...Object.fromEntries(new FormData(form)) };
+    const res = await api('POST', '/appointments', body);
+    if (res.ok) {
+      const a = res.data.data;
+      showErrors(form, {});
+      const alert = form.querySelector('.alert');
+      alert.className = 'alert success'; alert.hidden = false;
+      alert.innerHTML = `Вы записаны на ${ruDate(a.date)} в ${a.time}, кабинет ${esc(a.doctor.cabinet)}. <a href="appointments.html">Мои записи</a>`;
+      loadSlots();
+    } else {
+      showErrors(form, res.errors, res.message); // 409 — сообщение о нарушении бизнес-правила
+    }
+  };
+
+  (async () => {
+    const user = await renderHeader();
+    document.getElementById('guest-note').hidden = !!user && user.role === 'patient';
+    if (user && user.role !== 'patient') document.getElementById('guest-note').innerHTML = 'Записаться на приём может только пациент.';
+    await loadDoctor();
+    if (user?.role === 'patient') loadSlots();
+  })();
+</script>
+</body>
+</html>

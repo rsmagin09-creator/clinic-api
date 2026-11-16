@@ -1,68 +1,69 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <title>Врачи и записи — Запись в поликлинику</title>
-  <link rel="stylesheet" href="css/style.css">
-</head>
+<head><meta charset="utf-8"><title>Врачи — Запись в поликлинику</title><link rel="stylesheet" href="css/style.css"></head>
 <body>
-<header><div class="logo">🏥 Поликлиника</div><nav><a href="index.html">Врачи</a></nav><div id="user-box"></div></header>
+<header><div class="logo">🏥 Поликлиника</div><nav></nav><div id="user-box"></div></header>
 <main>
-  <div class="card" id="my-card" hidden>
-    <h2 id="my-title">Мои записи на приём</h2>
-    <table>
-      <thead><tr><th>Дата</th><th>Время</th><th id="col-person">Врач</th><th>Кабинет</th><th>Причина</th><th>Статус</th></tr></thead>
-      <tbody id="my-rows"><tr><td colspan="6" class="muted">Загрузка…</td></tr></tbody>
-    </table>
-  </div>
-
   <div class="card">
-    <h2>Врачи поликлиники</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h2>Врачи поликлиники</h2>
+      <a class="btn primary-sm" href="doctor-form.html" data-role="admin" hidden>+ Добавить врача</a>
+    </div>
+    <form class="filters" id="filters">
+      <div><label>Поиск по ФИО или кабинету</label><input name="search" placeholder="Например: Иванов"></div>
+      <div><label>Специальность</label><select name="specialty_id"><option value="">Все</option></select></div>
+      <div><label>Стаж от, лет</label><input name="experience_min" type="number" min="0"></div>
+      <div><label>Сортировка</label><select name="sort">
+        <option value="name">По ФИО</option><option value="experience_years">По стажу</option><option value="cabinet">По кабинету</option></select></div>
+      <div><label>Порядок</label><select name="order"><option value="asc">↑</option><option value="desc">↓</option></select></div>
+      <div><button class="btn primary-sm" type="submit">Найти</button></div>
+    </form>
     <table>
-      <thead><tr><th>ФИО</th><th>Специальности</th><th>Кабинет</th><th>Стаж</th><th>О враче</th></tr></thead>
-      <tbody id="doctor-rows"><tr><td colspan="5" class="muted">Загрузка…</td></tr></tbody>
+      <thead><tr><th>ФИО</th><th>Специальности</th><th>Кабинет</th><th>Стаж</th><th>О враче</th><th></th></tr></thead>
+      <tbody id="rows"><tr><td colspan="6" class="muted">Загрузка…</td></tr></tbody>
     </table>
-    <p class="muted" id="doctor-meta"></p>
+    <div class="pager" id="pager"></div>
   </div>
 </main>
-<script src="js/config.js"></script>
-<script src="js/api.js"></script>
+<script src="js/config.js"></script><script src="js/api.js"></script>
 <script>
-  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let user = null, page = 1;
+  const form = document.getElementById('filters');
 
-  async function loadDoctors() {
-    const res = await api('GET', '/doctors?per_page=20&sort=name');
-    const tbody = document.getElementById('doctor-rows');
-    if (!res.ok) { tbody.innerHTML = `<tr><td colspan="5" class="alert">${esc(res.message)}</td></tr>`; return; }
-    tbody.innerHTML = res.data.data.map(d => `<tr>
-      <td><b>${esc(d.name)}</b></td>
+  async function loadSpecialties() {
+    const res = await api('GET', '/specialties');
+    if (res.ok) form.specialty_id.innerHTML += res.data.data.map(s => `<option value="${s.id}">${esc(s.name)} (${s.doctors_count})</option>`).join('');
+  }
+
+  async function load() {
+    const params = { ...Object.fromEntries(new FormData(form)), page, per_page: 5 };
+    const res = await api('GET', '/doctors?' + qs(params));
+    const tbody = document.getElementById('rows');
+    if (!res.ok) { tbody.innerHTML = `<tr><td colspan="6"><div class="alert">${esc(res.message)}</div></td></tr>`; return; }
+    if (!res.data.data.length) tbody.innerHTML = '<tr><td colspan="6" class="muted">Ничего не найдено</td></tr>';
+    else tbody.innerHTML = res.data.data.map(d => `<tr>
+      <td><a href="doctor.html?id=${d.id}"><b>${esc(d.name)}</b></a></td>
       <td>${d.specialties.map(s => `<span class="tag">${esc(s.name)}</span>`).join('')}</td>
       <td>${esc(d.cabinet)}</td><td>${d.experience_years} лет</td><td class="muted">${esc(d.description ?? '—')}</td>
-    </tr>`).join('');
-    document.getElementById('doctor-meta').textContent =
-      `Всего врачей: ${res.data.meta.total}, страница ${res.data.meta.current_page} из ${res.data.meta.last_page}`;
+      <td style="white-space:nowrap">
+        <a class="btn" href="doctor.html?id=${d.id}">${user?.role === 'patient' ? 'Записаться' : 'Подробнее'}</a>
+        ${user?.role === 'admin' ? `<a class="btn" href="doctor-form.html?id=${d.id}">Изменить</a>
+          <button class="btn danger" data-del="${d.id}" data-name="${esc(d.name)}">Удалить</button>` : ''}
+      </td></tr>`).join('');
+    renderPager(document.getElementById('pager'), res.data.meta, p => { page = p; load(); });
+    tbody.querySelectorAll('[data-del]').forEach(b => b.onclick = () => removeDoctor(b.dataset.del, b.dataset.name));
   }
 
-  async function loadMyAppointments(user) {
-    document.getElementById('my-card').hidden = false;
-    if (user.role === 'doctor') { document.getElementById('my-title').textContent = 'Мои приёмы'; document.getElementById('col-person').textContent = 'Пациент'; }
-    if (user.role === 'admin') { document.getElementById('my-title').textContent = 'Все записи на приём'; }
-    const res = await api('GET', '/appointments?sort=date&order=desc&per_page=10');
-    const tbody = document.getElementById('my-rows');
-    if (!res.ok) { tbody.innerHTML = `<tr><td colspan="6" class="alert">${esc(res.message)}</td></tr>`; return; }
-    if (!res.data.data.length) { tbody.innerHTML = '<tr><td colspan="6" class="muted">Записей пока нет</td></tr>'; return; }
-    tbody.innerHTML = res.data.data.map(a => `<tr>
-      <td>${a.date.split('-').reverse().join('.')}</td><td>${a.time}</td>
-      <td>${esc(user.role === 'doctor' ? a.patient?.name : a.doctor?.name)}</td>
-      <td>${esc(a.doctor?.cabinet)}</td><td>${esc(a.reason ?? '—')}</td>
-      <td class="status-${a.status}">${esc(a.status_label)}</td></tr>`).join('');
+  async function removeDoctor(id, name) {
+    if (!confirm(`Удалить врача «${name}»? Действие нельзя отменить.`)) return;
+    const res = await api('DELETE', '/doctors/' + id);
+    if (res.ok) { toast('Врач удалён'); load(); } else toast(res.message, 'err');
   }
 
-  (async () => {
-    const user = await renderHeader();
-    if (user) loadMyAppointments(user);
-    loadDoctors();
-  })();
+  form.onsubmit = e => { e.preventDefault(); page = 1; load(); };
+  form.sort.onchange = form.order.onchange = form.specialty_id.onchange = () => { page = 1; load(); };
+
+  (async () => { user = await renderHeader(); await loadSpecialties(); load(); })();
 </script>
 </body>
 </html>

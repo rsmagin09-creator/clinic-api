@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Записи на приём — Поликлиника</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<header><div class="logo">🏥 Поликлиника</div><nav></nav><div id="user-box"></div></header>
+<main>
+  <div class="card">
+    <h2 id="title">Записи на приём</h2>
+    <form class="filters" id="filters" style="grid-template-columns: 1.3fr 1fr 1fr 1fr auto">
+      <div><label>Статус</label><select name="status"><option value="">Все</option>
+        <option value="scheduled">Запланирован</option><option value="completed">Завершён</option>
+        <option value="cancelled">Отменён</option><option value="no_show">Неявка</option></select></div>
+      <div><label>Дата с</label><input type="date" name="date_from"></div>
+      <div><label>Дата по</label><input type="date" name="date_to"></div>
+      <div><label>Порядок</label><select name="order"><option value="desc">Сначала новые</option><option value="asc">Сначала старые</option></select></div>
+      <div><button class="btn primary-sm" type="submit">Показать</button></div>
+    </form>
+    <div class="alert" id="list-error" hidden></div>
+    <table>
+      <thead><tr><th>Дата</th><th>Время</th><th id="col-person">Врач</th><th>Кабинет</th><th>Причина</th><th>Статус</th><th>Действия</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="7" class="muted">Загрузка…</td></tr></tbody>
+    </table>
+    <div class="pager" id="pager"></div>
+  </div>
+</main>
+
+<div class="modal-bg" id="mr-modal" hidden>
+  <form class="modal" id="mr-form" novalidate>
+    <h2>Запись в медкнижку</h2>
+    <p class="muted" id="mr-info"></p>
+    <label>Диагноз *</label><input name="diagnosis" required maxlength="255">
+    <div class="field-error" data-error="diagnosis"></div>
+    <label>Результаты осмотра</label><textarea name="examination"></textarea>
+    <div class="field-error" data-error="examination"></div>
+    <label>Назначения</label><textarea name="prescription"></textarea>
+    <div class="field-error" data-error="prescription"></div>
+    <div class="alert" hidden></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn primary-sm" type="submit">Сохранить</button>
+      <button class="btn" type="button" id="mr-cancel">Отмена</button>
+    </div>
+  </form>
+</div>
+
+<script src="js/config.js"></script><script src="js/api.js"></script>
+<script>
+  let user = null, page = 1, mrId = null;
+  const form = document.getElementById('filters');
+
+  function actions(a) {
+    const b = [];
+    if (a.status === 'scheduled' && (user.role === 'patient' || user.role === 'admin'))
+      b.push(`<button class="btn danger" data-act="cancel" data-id="${a.id}">Отменить</button>`);
+    if (a.status === 'scheduled' && (user.role === 'doctor' || user.role === 'admin'))
+      b.push(`<button class="btn success" data-act="completed" data-id="${a.id}">Завершить</button>`,
+             `<button class="btn" data-act="no_show" data-id="${a.id}">Неявка</button>`);
+    if (a.status === 'completed' && user.role === 'doctor')
+      b.push(`<button class="btn primary-sm" data-act="record" data-id="${a.id}" data-info="${esc(a.patient?.name)}, ${ruDate(a.date)} ${a.time}">В медкнижку</button>`);
+    return b.join('') || '<span class="muted">—</span>';
+  }
+
+  async function load() {
+    const params = { ...Object.fromEntries(new FormData(form)), sort: 'date', page, per_page: 8 };
+    const res = await api('GET', '/appointments?' + qs(params));
+    const err = document.getElementById('list-error');
+    const tbody = document.getElementById('rows');
+    if (!res.ok) {
+      err.hidden = false;
+      err.textContent = res.errors ? Object.values(res.errors).flat().join(' ') : res.message;
+      tbody.innerHTML = ''; return;
+    }
+    err.hidden = true;
+    tbody.innerHTML = res.data.data.map(a => `<tr>
+      <td>${ruDate(a.date)}</td><td>${a.time}</td>
+      <td>${esc(user.role === 'doctor' ? a.patient?.name : a.doctor?.name)}${user.role === 'admin' ? `<br><span class="muted">пациент: ${esc(a.patient?.name)}</span>` : ''}</td>
+      <td>${esc(a.doctor?.cabinet)}</td><td>${esc(a.reason ?? '—')}</td>
+      <td class="status-${a.status}">${esc(a.status_label)}</td><td style="white-space:nowrap">${actions(a)}</td></tr>`).join('')
+      || '<tr><td colspan="7" class="muted">Записей нет</td></tr>';
+    renderPager(document.getElementById('pager'), res.data.meta, p => { page = p; load(); });
+    tbody.querySelectorAll('[data-act]').forEach(b => b.onclick = () => act(b));
+  }
+
+  async function act(b) {
+    const id = b.dataset.id;
+    if (b.dataset.act === 'record') return openRecord(id, b.dataset.info);
+    let res;
+    if (b.dataset.act === 'cancel') {
+      if (!confirm('Отменить запись на приём?')) return;
+      res = await api('POST', `/appointments/${id}/cancel`);
+    } else {
+      const label = b.dataset.act === 'completed' ? 'Отметить приём как завершённый?' : 'Отметить неявку пациента?';
+      if (!confirm(label)) return;
+      res = await api('PATCH', `/appointments/${id}/status`, { status: b.dataset.act });
+    }
+    if (res.ok) { toast('Статус: ' + res.data.data.status_label); load(); }
+    else toast(res.message, 'err'); // 409 — нарушение бизнес-правила
+  }
+
+  const mrForm = document.getElementById('mr-form');
+  function openRecord(id, info) {
+    mrId = id; mrForm.reset(); showErrors(mrForm, {});
+    document.getElementById('mr-info').textContent = 'Пациент: ' + info;
+    document.getElementById('mr-modal').hidden = false;
+  }
+  document.getElementById('mr-cancel').onclick = () => document.getElementById('mr-modal').hidden = true;
+  mrForm.onsubmit = async (e) => {
+    e.preventDefault();
+    if (!checkRequired(mrForm)) return;
+    const res = await api('POST', `/appointments/${mrId}/medical-record`, Object.fromEntries(new FormData(mrForm)));
+    if (res.ok) { document.getElementById('mr-modal').hidden = true; toast('Запись внесена в медкнижку'); load(); }
+    else showErrors(mrForm, res.errors, res.message);
+  };
+
+  form.onsubmit = e => { e.preventDefault(); page = 1; load(); };
+  form.status.onchange = form.order.onchange = () => { page = 1; load(); };
+
+  (async () => {
+    user = await renderHeader({ requireAuth: true });
+    if (!user) return;
+    if (user.role === 'doctor') { document.getElementById('title').textContent = 'Мои приёмы'; document.getElementById('col-person').textContent = 'Пациент'; }
+    if (user.role === 'patient') document.getElementById('title').textContent = 'Мои записи на приём';
+    if (user.role === 'admin') document.getElementById('title').textContent = 'Все записи на приём';
+    load();
+  })();
+</script>
+</body>
+</html>

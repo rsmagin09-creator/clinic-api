@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Врач — редактирование</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<header><div class="logo">🏥 Поликлиника</div><nav></nav><div id="user-box"></div></header>
+<main>
+  <div class="card" style="max-width:640px;margin:0 auto">
+    <h1 id="title">Новый врач</h1>
+    <form id="doc-form" novalidate>
+      <label>ФИО *</label><input name="name" required>
+      <div class="field-error" data-error="name"></div>
+      <div class="grid2">
+        <div><label>Email *</label><input name="email" type="email" required><div class="field-error" data-error="email"></div></div>
+        <div><label>Телефон</label><input name="phone"><div class="field-error" data-error="phone"></div></div>
+      </div>
+      <div id="pwd-box"><label>Пароль *</label><input name="password" type="password" required>
+        <div class="field-error" data-error="password"></div></div>
+      <div class="grid2">
+        <div><label>Кабинет *</label><input name="cabinet" required><div class="field-error" data-error="cabinet"></div></div>
+        <div><label>Стаж, лет *</label><input name="experience_years" type="number" min="0" required><div class="field-error" data-error="experience_years"></div></div>
+      </div>
+      <label>О враче</label><input name="description">
+      <div class="field-error" data-error="description"></div>
+      <label>Специальности *</label>
+      <div class="checks" id="spec-box"><span class="muted">Загрузка…</span></div>
+      <div class="field-error" data-error="specialty_ids"></div>
+      <div class="alert" hidden></div>
+      <button class="primary" type="submit">Сохранить</button>
+    </form>
+  </div>
+</main>
+<script src="js/config.js"></script><script src="js/api.js"></script>
+<script>
+  const id = new URLSearchParams(location.search).get('id');
+  const form = document.getElementById('doc-form');
+
+  (async () => {
+    const user = await renderHeader({ requireAuth: true, roles: ['admin'] });
+    if (!user) return;
+    const sp = await api('GET', '/specialties');
+    document.getElementById('spec-box').innerHTML = sp.data.data.map(s =>
+      `<label><input type="checkbox" name="specialty_ids" value="${s.id}"> ${esc(s.name)}</label>`).join('');
+
+    if (id) {
+      document.getElementById('title').textContent = 'Изменение данных врача';
+      document.getElementById('pwd-box').hidden = true;
+      form.password.required = false;
+      const res = await api('GET', '/doctors/' + id);
+      if (!res.ok) { showErrors(form, {}, res.message); return; }
+      const d = res.data.data;
+      ['name', 'email', 'cabinet', 'experience_years', 'description'].forEach(f => form.elements[f].value = d[f] ?? '');
+      d.specialties.forEach(s => { const c = form.querySelector(`[name=specialty_ids][value="${s.id}"]`); if (c) c.checked = true; });
+    }
+  })();
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    if (!checkRequired(form)) return;
+    const fd = new FormData(form);
+    const body = Object.fromEntries(fd);
+    body.specialty_ids = fd.getAll('specialty_ids').map(Number);
+    body.experience_years = Number(body.experience_years);
+    if (id) delete body.password;
+    if (!body.phone) delete body.phone;
+    const res = id ? await api('PATCH', '/doctors/' + id, body) : await api('POST', '/doctors', body);
+    if (res.ok) {
+      showErrors(form, {});
+      const a = form.querySelector('.alert');
+      a.className = 'alert success'; a.hidden = false;
+      a.innerHTML = `Сохранено: ${esc(res.data.data.name)}, кабинет ${esc(res.data.data.cabinet)}. <a href="index.html">К списку врачей</a>`;
+      if (!id) history.replaceState(null, '', 'doctor-form.html?id=' + res.data.data.id);
+    } else {
+      showErrors(form, res.errors, res.message);
+    }
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Администрирование — Поликлиника</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<header><div class="logo">🏥 Поликлиника</div><nav></nav><div id="user-box"></div></header>
+<main>
+  <div class="card">
+    <h2>Статистика записей за текущий месяц</h2>
+    <div id="stats" class="muted">Загрузка…</div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h2>Специальности</h2>
+      <table><thead><tr><th>Название</th><th>Врачей</th><th></th></tr></thead><tbody id="spec-rows"></tbody></table>
+    </div>
+    <div class="card">
+      <h2 id="spec-title">Добавить специальность</h2>
+      <form id="spec-form" novalidate>
+        <input type="hidden" name="spec_id">
+        <label>Название *</label><input name="name" required maxlength="255">
+        <div class="field-error" data-error="name"></div>
+        <label>Описание</label><textarea name="description"></textarea>
+        <div class="field-error" data-error="description"></div>
+        <div class="alert" hidden></div>
+        <div style="display:flex;gap:10px"><button class="primary" type="submit">Сохранить</button>
+          <button class="primary" type="button" id="spec-reset" style="background:#7b8794">Очистить</button></div>
+      </form>
+      <p class="hint"><a href="doctor-form.html">+ Добавить врача</a> · <a href="index.html">Список врачей</a></p>
+    </div>
+  </div>
+</main>
+<script src="js/config.js"></script><script src="js/api.js"></script>
+<script>
+  const form = document.getElementById('spec-form');
+  let specs = [];
+
+  async function loadStats() {
+    const res = await api('GET', '/stats/appointments');
+    const box = document.getElementById('stats');
+    if (!res.ok) { box.innerHTML = `<div class="alert">${esc(res.message)}</div>`; return; }
+    const s = res.data.data;
+    box.innerHTML = `<p>Всего записей: <b>${s.total}</b>, завершено: <b>${s.completed_percent}%</b></p>
+      <div class="grid2"><table><thead><tr><th>Статус</th><th>Количество</th></tr></thead><tbody>
+      ${s.by_status.map(x => `<tr><td class="status-${x.status}">${x.label}</td><td>${x.total}</td></tr>`).join('')}</tbody></table>
+      <table><thead><tr><th>Врач</th><th>Записей</th><th>Завершено</th></tr></thead><tbody>
+      ${s.by_doctor.slice(0, 5).map(x => `<tr><td>${esc(x.doctor)}</td><td>${x.total}</td><td>${x.completed}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+
+  async function loadSpecs() {
+    const res = await api('GET', '/specialties');
+    specs = res.data.data;
+    document.getElementById('spec-rows').innerHTML = specs.map(s => `<tr>
+      <td><b>${esc(s.name)}</b><br><span class="muted">${esc(s.description ?? '')}</span></td><td>${s.doctors_count}</td>
+      <td style="white-space:nowrap"><button class="btn" data-edit="${s.id}">Изменить</button>
+      <button class="btn danger" data-del="${s.id}">Удалить</button></td></tr>`).join('');
+    document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => edit(+b.dataset.edit));
+    document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => remove(+b.dataset.del));
+  }
+
+  function edit(id) {
+    const s = specs.find(x => x.id === id);
+    form.elements.spec_id.value = s.id; form.elements.name.value = s.name; form.elements.description.value = s.description ?? '';
+    document.getElementById('spec-title').textContent = 'Изменить специальность';
+    showErrors(form, {});
+  }
+  function reset() { form.reset(); form.elements.spec_id.value = ''; document.getElementById('spec-title').textContent = 'Добавить специальность'; showErrors(form, {}); }
+  document.getElementById('spec-reset').onclick = reset;
+
+  async function remove(id) {
+    const s = specs.find(x => x.id === id);
+    if (!confirm(`Удалить специальность «${s.name}»? У врачей она будет убрана.`)) return;
+    const res = await api('DELETE', '/specialties/' + id);
+    if (res.ok) { toast('Специальность удалена'); loadSpecs(); } else toast(res.message, 'err');
+  }
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    if (!checkRequired(form)) return;
+    const body = { name: form.elements.name.value, description: form.elements.description.value || null };
+    const res = form.elements.spec_id.value ? await api('PUT', '/specialties/' + form.elements.spec_id.value, body) : await api('POST', '/specialties', body);
+    if (res.ok) { toast('Сохранено: ' + res.data.data.name); reset(); loadSpecs(); }
+    else showErrors(form, res.errors, res.message);
+  };
+
+  (async () => {
+    const user = await renderHeader({ requireAuth: true, roles: ['admin'] });
+    if (!user) return;
+    loadStats(); loadSpecs();
+  })();
+</script>
+</body>
+</html>

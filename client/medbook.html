@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Медицинская книжка — Поликлиника</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<header><div class="logo">🏥 Поликлиника</div><nav></nav><div id="user-box"></div></header>
+<main>
+  <div class="card">
+    <h2>Моя медицинская книжка</h2>
+    <div id="records"><p class="muted">Загрузка…</p></div>
+  </div>
+</main>
+<script src="js/config.js"></script><script src="js/api.js"></script>
+<script>
+  (async () => {
+    const user = await renderHeader({ requireAuth: true });
+    if (!user) return;
+    const res = await api('GET', '/medical-records');
+    const box = document.getElementById('records');
+    if (!res.ok) { box.innerHTML = `<div class="alert">${esc(res.message)}</div>`; return; }
+    box.innerHTML = res.data.data.map(r => `<div class="mr">
+      <div><b>${ruDate(r.appointment?.date)} ${r.appointment?.time ?? ''}</b> — ${esc(r.appointment?.doctor?.name)}, каб. ${esc(r.appointment?.doctor?.cabinet)}</div>
+      <div class="info-row"><b>Диагноз</b><span>${esc(r.diagnosis)}</span></div>
+      <div class="info-row"><b>Осмотр</b><span>${esc(r.examination ?? '—')}</span></div>
+      <div class="info-row"><b>Назначения</b><span>${esc(r.prescription ?? '—')}</span></div></div>`).join('')
+      || '<p class="muted">Записей пока нет. Они появятся после приёма у врача.</p>';
+  })();
+</script>
+</body>
+</html>
