@@ -124,3 +124,10 @@ async function renderHeader({ requireAuth = false, roles = null } = {}) {
   }
   return user;
 }
+
+// при вводе убираем подсветку ошибки у поля
+document.addEventListener('input', e => {
+  const el = e.target; if (!el.name) return;
+  el.classList.remove('invalid');
+  const box = el.form?.querySelector(`[data-error="${el.name}"]`); if (box) box.textContent = '';
+});

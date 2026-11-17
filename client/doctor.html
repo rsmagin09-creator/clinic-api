@@ -83,11 +83,10 @@
     const res = await api('POST', '/appointments', body);
     if (res.ok) {
       const a = res.data.data;
-      showErrors(form, {});
+      await loadSlots();
       const alert = form.querySelector('.alert');
       alert.className = 'alert success'; alert.hidden = false;
       alert.innerHTML = `Вы записаны на ${ruDate(a.date)} в ${a.time}, кабинет ${esc(a.doctor.cabinet)}. <a href="appointments.html">Мои записи</a>`;
-      loadSlots();
     } else {
       showErrors(form, res.errors, res.message); // 409 — сообщение о нарушении бизнес-правила
     }

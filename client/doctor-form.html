@@ -49,6 +49,7 @@
       if (!res.ok) { showErrors(form, {}, res.message); return; }
       const d = res.data.data;
       ['name', 'email', 'cabinet', 'experience_years', 'description'].forEach(f => form.elements[f].value = d[f] ?? '');
+      if (new URLSearchParams(location.search).get('saved')) { const a = form.querySelector('.alert'); a.className = 'alert success'; a.hidden = false; a.innerHTML = `Врач добавлен: ${esc(d.name)}. <a href="index.html">К списку врачей</a>`; }
       d.specialties.forEach(s => { const c = form.querySelector(`[name=specialty_ids][value="${s.id}"]`); if (c) c.checked = true; });
     }
   })();
@@ -68,7 +69,7 @@
       const a = form.querySelector('.alert');
       a.className = 'alert success'; a.hidden = false;
       a.innerHTML = `Сохранено: ${esc(res.data.data.name)}, кабинет ${esc(res.data.data.cabinet)}. <a href="index.html">К списку врачей</a>`;
-      if (!id) history.replaceState(null, '', 'doctor-form.html?id=' + res.data.data.id);
+      if (!id) location.replace('doctor-form.html?saved=1&id=' + res.data.data.id);
     } else {
       showErrors(form, res.errors, res.message);
     }
