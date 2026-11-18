@@ -57,3 +57,30 @@ textarea { width: 100%; padding: 9px 10px; border: 1px solid #c4ced8; border-rad
 .price-line { margin: 10px 0 0; font-size: 15px; }
 .price-group h3 { margin: 18px 0 8px; color: #1f4e79; }
 .price-num { white-space: nowrap; font-weight: 600; text-align: right; }
+
+/* ---------- Адаптивность: планшеты и телефоны (от 360 px) ---------- */
+img { max-width: 100%; }
+@media (max-width: 900px) {
+  .filters { grid-template-columns: 1fr 1fr !important; }
+  .grid2 { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 640px) {
+  header { flex-wrap: wrap; gap: 8px 16px; padding: 10px 14px; }
+  header nav { order: 3; width: 100%; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  header nav a { margin-right: 0; }
+  #user-box { font-size: 14px; }
+  main { margin: 12px auto; padding: 0 10px; }
+  .card { padding: 16px 14px; }
+  h1 { font-size: 22px; }
+  h2 { font-size: 19px; }
+  .filters { grid-template-columns: 1fr !important; }
+  .filters button { width: 100%; }
+  /* широкие таблицы прокручиваются внутри карточки, а не растягивают страницу */
+  table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+  td, th { white-space: normal; min-width: 90px; }
+  .info-row { flex-direction: column; gap: 2px; }
+  .slots { gap: 6px; }
+  .pager { flex-wrap: wrap; }
+  .modal { width: calc(100vw - 20px); max-height: 90vh; overflow-y: auto; }
+  .toast { left: 10px; right: 10px; bottom: 10px; }
+}
