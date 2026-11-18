@@ -97,7 +97,7 @@ async function renderHeader({ requireAuth = false, roles = null } = {}) {
   }
   if (!user && requireAuth) { location.href = 'login.html'; return null; }
 
-  const links = [['index.html', 'Врачи']];
+  const links = [['index.html', 'Врачи'], ['prices.html', 'Цены']];
   if (user?.role === 'patient') links.push(['appointments.html', 'Мои записи'], ['medbook.html', 'Медкнижка']);
   if (user?.role === 'doctor') links.push(['appointments.html', 'Мои приёмы']);
   if (user?.role === 'admin') links.push(['appointments.html', 'Все записи'], ['admin.html', 'Администрирование']);
@@ -131,3 +131,6 @@ document.addEventListener('input', e => {
   el.classList.remove('invalid');
   const box = el.form?.querySelector(`[data-error="${el.name}"]`); if (box) box.textContent = '';
 });
+
+// сумма в тенге: 12500 → «12 500 ₸»
+function tenge(v) { return v == null ? '—' : Number(v).toLocaleString('ru-RU').replace(/\u00a0/g, ' ') + ' ₸'; }

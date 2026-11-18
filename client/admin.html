@@ -25,7 +25,7 @@
         <div style="display:flex;gap:10px"><button class="primary" type="submit">Сохранить</button>
           <button class="primary" type="button" id="spec-reset" style="background:#7b8794">Очистить</button></div>
       </form>
-      <p class="hint"><a href="doctor-form.html">+ Добавить врача</a> · <a href="index.html">Список врачей</a></p>
+      <p class="hint"><a href="doctor-form.html">+ Добавить врача</a> · <a href="prices.html">Прейскурант</a> · <a href="index.html">Список врачей</a></p>
     </div>
   </div>
 </main>
@@ -39,11 +39,11 @@
     const box = document.getElementById('stats');
     if (!res.ok) { box.innerHTML = `<div class="alert">${esc(res.message)}</div>`; return; }
     const s = res.data.data;
-    box.innerHTML = `<p>Всего записей: <b>${s.total}</b>, завершено: <b>${s.completed_percent}%</b></p>
+    box.innerHTML = `<p>Всего записей: <b>${s.total}</b>, завершено: <b>${s.completed_percent}%</b>, выручка за завершённые приёмы: <b>${s.revenue_formatted}</b></p>
       <div class="grid2"><table><thead><tr><th>Статус</th><th>Количество</th></tr></thead><tbody>
       ${s.by_status.map(x => `<tr><td class="status-${x.status}">${x.label}</td><td>${x.total}</td></tr>`).join('')}</tbody></table>
-      <table><thead><tr><th>Врач</th><th>Записей</th><th>Завершено</th></tr></thead><tbody>
-      ${s.by_doctor.slice(0, 5).map(x => `<tr><td>${esc(x.doctor)}</td><td>${x.total}</td><td>${x.completed}</td></tr>`).join('')}</tbody></table></div>`;
+      <table><thead><tr><th>Врач</th><th>Записей</th><th>Завершено</th><th>Выручка</th></tr></thead><tbody>
+      ${s.by_doctor.slice(0, 5).map(x => `<tr><td>${esc(x.doctor)}</td><td>${x.total}</td><td>${x.completed}</td><td style="white-space:nowrap">${x.revenue_formatted}</td></tr>`).join('')}</tbody></table></div>`;
   }
 
   async function loadSpecs() {

@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\DB;
 class DoctorService
 {
     private const USER_FIELDS = ['name', 'email', 'phone', 'password'];
-    private const DOCTOR_FIELDS = ['cabinet', 'experience_years', 'description'];
+    private const DOCTOR_FIELDS = ['cabinet', 'experience_years', 'price', 'description'];
 
     /** Белый список полей сортировки. */
-    private const SORTS = ['name', 'experience_years', 'cabinet', 'id'];
+    private const SORTS = ['name', 'experience_years', 'cabinet', 'price', 'id'];
 
     /** Список врачей: поиск, фильтры, сортировка, пагинация. */
     public function list(array $filters): LengthAwarePaginator

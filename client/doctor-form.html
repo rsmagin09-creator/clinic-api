@@ -19,6 +19,8 @@
         <div><label>Кабинет *</label><input name="cabinet" required><div class="field-error" data-error="cabinet"></div></div>
         <div><label>Стаж, лет *</label><input name="experience_years" type="number" min="0" required><div class="field-error" data-error="experience_years"></div></div>
       </div>
+      <label>Стоимость приёма, ₸ *</label><input name="price" type="number" min="0" step="500" value="5000" required>
+      <div class="field-error" data-error="price"></div>
       <label>О враче</label><input name="description">
       <div class="field-error" data-error="description"></div>
       <label>Специальности *</label>
@@ -48,7 +50,7 @@
       const res = await api('GET', '/doctors/' + id);
       if (!res.ok) { showErrors(form, {}, res.message); return; }
       const d = res.data.data;
-      ['name', 'email', 'cabinet', 'experience_years', 'description'].forEach(f => form.elements[f].value = d[f] ?? '');
+      ['name', 'email', 'cabinet', 'experience_years', 'price', 'description'].forEach(f => form.elements[f].value = d[f] ?? '');
       if (new URLSearchParams(location.search).get('saved')) { const a = form.querySelector('.alert'); a.className = 'alert success'; a.hidden = false; a.innerHTML = `Врач добавлен: ${esc(d.name)}. <a href="index.html">К списку врачей</a>`; }
       d.specialties.forEach(s => { const c = form.querySelector(`[name=specialty_ids][value="${s.id}"]`); if (c) c.checked = true; });
     }
@@ -61,6 +63,7 @@
     const body = Object.fromEntries(fd);
     body.specialty_ids = fd.getAll('specialty_ids').map(Number);
     body.experience_years = Number(body.experience_years);
+    body.price = Number(body.price);
     if (id) delete body.password;
     if (!body.phone) delete body.phone;
     const res = id ? await api('PATCH', '/doctors/' + id, body) : await api('POST', '/doctors', body);

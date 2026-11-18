@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\DoctorSpecialtyController;
 use App\Http\Controllers\Api\MedicalRecordController;
+use App\Http\Controllers\Api\MedicalServiceController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\SpecialtyController;
 use App\Http\Controllers\Api\StatsController;
@@ -40,6 +41,7 @@ Route::prefix('v1')->name('v1.')->group(function () {
 
     Route::apiResource('specialties', SpecialtyController::class)->only(['index', 'show']);
     Route::apiResource('doctors', DoctorController::class)->only(['index', 'show']);
+    Route::apiResource('services', MedicalServiceController::class)->only(['index', 'show']); // прейскурант
     Route::get('doctors/{doctor}/slots', [DoctorController::class, 'slots'])->name('doctors.slots');
     Route::get('doctors/{doctor}/schedules', [ScheduleController::class, 'index'])->name('doctors.schedules.index');
     Route::get('schedules/{schedule}', [ScheduleController::class, 'show'])->name('schedules.show');
@@ -64,6 +66,7 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::apiResource('specialties', SpecialtyController::class)->except(['index', 'show']);
             Route::apiResource('doctors', DoctorController::class)->except(['index', 'show']);
+            Route::apiResource('services', MedicalServiceController::class)->except(['index', 'show']);
             Route::post('doctors/{doctor}/specialties', [DoctorSpecialtyController::class, 'store'])->name('doctors.specialties.attach');
             Route::delete('doctors/{doctor}/specialties/{specialty}', [DoctorSpecialtyController::class, 'destroy'])->name('doctors.specialties.detach');
 

@@ -87,6 +87,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($previous instanceof ModelNotFoundException) {
                 $message = match ($previous->getModel()) {
                     Specialty::class => 'Специальность не найдена',
+                    \App\Models\MedicalService::class => 'Услуга не найдена',
                     Doctor::class => 'Врач не найден',
                     Schedule::class => 'Рабочий день не найден',
                     Appointment::class => 'Запись на приём не найдена',

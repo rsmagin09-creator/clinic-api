@@ -41,6 +41,7 @@ class AppointmentSeeder extends Seeder
                     'date' => $date,
                     'time' => $time,
                     'status' => $status,
+                    'price' => $doctor->price,
                 ]);
             }
         }

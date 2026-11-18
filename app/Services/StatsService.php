@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\Money;
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
 use App\Models\Doctor;
@@ -31,6 +32,7 @@ class StatsService
                 'appointments as completed' => fn ($q) => $period($q)->where('status', AppointmentStatus::Completed->value),
                 'appointments as no_show' => fn ($q) => $period($q)->where('status', AppointmentStatus::NoShow->value),
             ])
+            ->withSum(['appointments as revenue' => fn ($q) => $period($q)->where('status', AppointmentStatus::Completed->value)], 'price')
             ->orderByDesc('total')
             ->get()
             ->map(fn (Doctor $d) => [
@@ -39,6 +41,8 @@ class StatsService
                 'total' => $d->total,
                 'completed' => $d->completed,
                 'no_show' => $d->no_show,
+                'revenue' => (int) $d->revenue,
+                'revenue_formatted' => Money::tenge((int) $d->revenue),
             ]);
 
         $topSpecialties = DB::table('appointments')
@@ -51,12 +55,18 @@ class StatsService
             ->limit(5)
             ->get();
 
+        // Выручка — сумма цен завершённых приёмов за период, в тенге
+        $revenue = (int) Appointment::query()->tap($period)
+            ->where('status', AppointmentStatus::Completed->value)->sum('price');
+
         $total = $statuses->sum('total');
         $completed = $statuses->firstWhere('status', 'completed')['total'];
 
         return [
             'period' => ['from' => $from, 'to' => $to],
             'total' => $total,
+            'revenue' => $revenue,
+            'revenue_formatted' => Money::tenge($revenue),
             'completed_percent' => $total ? round($completed / $total * 100, 1) : 0,
             'by_status' => $statuses->values(),
             'by_doctor' => $byDoctor->values(),

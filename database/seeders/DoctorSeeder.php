@@ -20,7 +20,7 @@ class DoctorSeeder extends Seeder
                 'name' => 'Иванов Сергей Петрович',
                 'email' => 'doctor@clinic.ru',
             ]))
-            ->create(['cabinet' => '101', 'experience_years' => 20, 'description' => 'Врач высшей категории']);
+            ->create(['cabinet' => '101', 'experience_years' => 20, 'price' => 8000, 'description' => 'Врач высшей категории']);
         $main->specialties()->attach($specialties->whereIn('name', ['Терапевт', 'Кардиолог'])->pluck('id'));
 
         Doctor::factory()->count(7)->create()->each(function (Doctor $doctor) use ($specialties) {

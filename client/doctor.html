@@ -17,6 +17,7 @@
         <div class="slots" id="slots"><span class="muted">Выберите дату</span></div>
         <input type="hidden" name="time" required>
         <div class="field-error" data-error="time"></div>
+        <p class="price-line" id="price-line"></p>
         <label>Причина обращения</label>
         <input name="reason" maxlength="255" placeholder="Например: плановый осмотр">
         <div class="field-error" data-error="reason"></div>
@@ -37,10 +38,12 @@
     const card = document.getElementById('doctor-card');
     if (!res.ok) { card.innerHTML = `<div class="alert">${esc(res.message)}</div>`; return; }
     doctor = res.data.data;
+    document.getElementById('price-line').innerHTML = `Стоимость приёма: <b>${tenge(doctor.price)}</b>`;
     card.innerHTML = `<h1>${esc(doctor.name)}</h1>
       <div class="info-row"><b>Специальности</b><span>${doctor.specialties.map(s => `<span class="tag">${esc(s.name)}</span>`).join('')}</span></div>
       <div class="info-row"><b>Кабинет</b><span>${esc(doctor.cabinet)}</span></div>
       <div class="info-row"><b>Стаж</b><span>${doctor.experience_years} лет</span></div>
+      <div class="info-row"><b>Стоимость приёма</b><span><b>${tenge(doctor.price)}</b> · <a href="prices.html">все цены</a></span></div>
       <div class="info-row"><b>О враче</b><span>${esc(doctor.description ?? '—')}</span></div>
       <h2 style="margin-top:18px">График приёма</h2>
       <table><thead><tr><th>День</th><th>Часы</th><th>Приём</th></tr></thead><tbody>
@@ -86,7 +89,7 @@
       await loadSlots();
       const alert = form.querySelector('.alert');
       alert.className = 'alert success'; alert.hidden = false;
-      alert.innerHTML = `Вы записаны на ${ruDate(a.date)} в ${a.time}, кабинет ${esc(a.doctor.cabinet)}. <a href="appointments.html">Мои записи</a>`;
+      alert.innerHTML = `Вы записаны на ${ruDate(a.date)} в ${a.time}, кабинет ${esc(a.doctor.cabinet)}, стоимость ${tenge(a.price)} (оплата в кассе). <a href="appointments.html">Мои записи</a>`;
     } else {
       showErrors(form, res.errors, res.message); // 409 — сообщение о нарушении бизнес-правила
     }

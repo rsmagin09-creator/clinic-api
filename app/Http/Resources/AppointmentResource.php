@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,6 +17,8 @@ class AppointmentResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'reason' => $this->reason,
+            'price' => $this->price,
+            'price_formatted' => Money::tenge($this->price),
             'patient' => new UserResource($this->whenLoaded('user')),
             'doctor' => new DoctorResource($this->whenLoaded('doctor')),
             'medical_record' => new MedicalRecordResource($this->whenLoaded('medicalRecord')),

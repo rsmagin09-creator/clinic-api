@@ -18,7 +18,7 @@ class DoctorIndexRequest extends FormRequest
             'search' => ['nullable', 'string', 'max:100'],
             'specialty_id' => ['nullable', 'integer', 'exists:specialties,id'],
             'experience_min' => ['nullable', 'integer', 'min:0', 'max:60'],
-            'sort' => ['nullable', 'in:name,experience_years,cabinet,id'],
+            'sort' => ['nullable', 'in:name,experience_years,cabinet,price,id'],
             'order' => ['nullable', 'in:asc,desc'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],

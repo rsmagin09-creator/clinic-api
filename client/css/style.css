@@ -54,3 +54,6 @@ textarea { width: 100%; padding: 9px 10px; border: 1px solid #c4ced8; border-rad
 .modal { background: #fff; border-radius: 10px; padding: 20px 24px; width: 480px; max-width: 95vw; }
 .checks { display: flex; flex-wrap: wrap; gap: 6px 14px; } .checks label { display: flex; align-items: center; gap: 6px; font-weight: 400; margin: 0; } .checks input { width: auto; }
 .mr { border-left: 3px solid #1f4e79; padding: 8px 14px; margin: 10px 0; background: #f8fafc; }
+.price-line { margin: 10px 0 0; font-size: 15px; }
+.price-group h3 { margin: 18px 0 8px; color: #1f4e79; }
+.price-num { white-space: nowrap; font-weight: 600; text-align: right; }

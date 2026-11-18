@@ -17,6 +17,7 @@ class Doctor extends Model
         'user_id',
         'cabinet',
         'experience_years',
+        'price',
         'description',
     ];
 
@@ -24,6 +25,7 @@ class Doctor extends Model
     {
         return [
             'experience_years' => 'integer',
+            'price' => 'integer',
         ];
     }
 

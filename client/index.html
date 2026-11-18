@@ -14,13 +14,13 @@
       <div><label>Специальность</label><select name="specialty_id"><option value="">Все</option></select></div>
       <div><label>Стаж от, лет</label><input name="experience_min" type="number" min="0"></div>
       <div><label>Сортировка</label><select name="sort">
-        <option value="name">По ФИО</option><option value="experience_years">По стажу</option><option value="cabinet">По кабинету</option></select></div>
+        <option value="name">По ФИО</option><option value="experience_years">По стажу</option><option value="cabinet">По кабинету</option><option value="price">По цене приёма</option></select></div>
       <div><label>Порядок</label><select name="order"><option value="asc">↑</option><option value="desc">↓</option></select></div>
       <div><button class="btn primary-sm" type="submit">Найти</button></div>
     </form>
     <table>
-      <thead><tr><th>ФИО</th><th>Специальности</th><th>Кабинет</th><th>Стаж</th><th>О враче</th><th></th></tr></thead>
-      <tbody id="rows"><tr><td colspan="6" class="muted">Загрузка…</td></tr></tbody>
+      <thead><tr><th>ФИО</th><th>Специальности</th><th>Кабинет</th><th>Стаж</th><th>Приём</th><th>О враче</th><th></th></tr></thead>
+      <tbody id="rows"><tr><td colspan="7" class="muted">Загрузка…</td></tr></tbody>
     </table>
     <div class="pager" id="pager"></div>
   </div>
@@ -39,12 +39,12 @@
     const params = { ...Object.fromEntries(new FormData(form)), page, per_page: 5 };
     const res = await api('GET', '/doctors?' + qs(params));
     const tbody = document.getElementById('rows');
-    if (!res.ok) { tbody.innerHTML = `<tr><td colspan="6"><div class="alert">${esc(res.message)}</div></td></tr>`; return; }
-    if (!res.data.data.length) tbody.innerHTML = '<tr><td colspan="6" class="muted">Ничего не найдено</td></tr>';
+    if (!res.ok) { tbody.innerHTML = `<tr><td colspan="7"><div class="alert">${esc(res.message)}</div></td></tr>`; return; }
+    if (!res.data.data.length) tbody.innerHTML = '<tr><td colspan="7" class="muted">Ничего не найдено</td></tr>';
     else tbody.innerHTML = res.data.data.map(d => `<tr>
       <td><a href="doctor.html?id=${d.id}"><b>${esc(d.name)}</b></a></td>
       <td>${d.specialties.map(s => `<span class="tag">${esc(s.name)}</span>`).join('')}</td>
-      <td>${esc(d.cabinet)}</td><td>${d.experience_years} лет</td><td class="muted">${esc(d.description ?? '—')}</td>
+      <td>${esc(d.cabinet)}</td><td>${d.experience_years} лет</td><td style="white-space:nowrap"><b>${tenge(d.price)}</b></td><td class="muted">${esc(d.description ?? '—')}</td>
       <td style="white-space:nowrap">
         <a class="btn" href="doctor.html?id=${d.id}">${user?.role === 'patient' ? 'Записаться' : 'Подробнее'}</a>
         ${user?.role === 'admin' ? `<a class="btn" href="doctor-form.html?id=${d.id}">Изменить</a>

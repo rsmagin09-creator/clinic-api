@@ -21,6 +21,7 @@ class Appointment extends Model
         'time',
         'status',
         'reason',
+        'price',
     ];
 
     protected $attributes = [
@@ -32,6 +33,7 @@ class Appointment extends Model
         return [
             'date' => 'date:Y-m-d',
             'status' => AppointmentStatus::class,
+            'price' => 'integer',
         ];
     }
 

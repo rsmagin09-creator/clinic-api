@@ -144,6 +144,7 @@ class AppointmentService
                 'time' => $time,
                 'status' => AppointmentStatus::Scheduled,
                 'reason' => $data['reason'] ?? null,
+                'price' => $doctor->price, // цена фиксируется на момент записи
             ]);
 
             Log::info('Создана запись на приём', [

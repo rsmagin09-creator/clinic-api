@@ -22,6 +22,7 @@ class UpdateDoctorRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20'],
             'cabinet' => ['sometimes', 'required', 'string', 'max:10'],
             'experience_years' => ['sometimes', 'required', 'integer', 'min:0', 'max:60'],
+            'price' => ['sometimes', 'required', 'integer', 'min:0', 'max:1000000'],
             'description' => ['nullable', 'string', 'max:2000'],
             'specialty_ids' => ['sometimes', 'array', 'min:1'],
             'specialty_ids.*' => ['integer', 'exists:specialties,id'],

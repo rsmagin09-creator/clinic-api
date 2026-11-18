@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,6 +16,8 @@ class DoctorResource extends JsonResource
             'email' => $this->whenLoaded('user', fn () => $this->user->email),
             'cabinet' => $this->cabinet,
             'experience_years' => $this->experience_years,
+            'price' => $this->price,
+            'price_formatted' => Money::tenge($this->price),
             'description' => $this->description,
             'specialties' => SpecialtyResource::collection($this->whenLoaded('specialties')),
             'schedules' => ScheduleResource::collection($this->whenLoaded('schedules')),

@@ -9,7 +9,7 @@ pre{background:#1e1e1e;color:#d4d4d4;padding:8px 10px;border-radius:6px;font-siz
 .err{display:inline-block;background:#fdecea;color:#b71c1c;border-radius:4px;padding:2px 8px;margin:3px 4px 0 0;font-size:12px}.muted{color:#999}
 .info{background:#fff;border:1px solid #dde3ea;border-radius:8px;padding:12px 16px;margin-top:14px;font-size:14px}</style></head><body>
 <header><h1>Clinic API — запись в поликлинику</h1><div>REST API на Laravel 13 · версия v1 · базовый адрес <b>http://127.0.0.1:8000/api/v1</b></div></header>
-<nav><a href="#g0">Аутентификация</a><a href="#g1">Специальности</a><a href="#g2">Врачи</a><a href="#g3">График работы</a><a href="#g4">Записи на приём</a><a href="#g5">Медкнижка</a><a href="#g6">Администрирование</a></nav><main><div class="info"><b>Аутентификация:</b> Laravel Sanctum, заголовок <code>Authorization: Bearer &lt;token&gt;</code>; токен выдаётся в /login и /register.
+<nav><a href="#g0">Аутентификация</a><a href="#g1">Специальности</a><a href="#g2">Врачи</a><a href="#gp">Цены (₸)</a> <a href="#g3">График работы</a><a href="#g4">Записи на приём</a><a href="#g5">Медкнижка</a><a href="#g6">Администрирование</a></nav><main><div class="info"><b>Аутентификация:</b> Laravel Sanctum, заголовок <code>Authorization: Bearer &lt;token&gt;</code>; токен выдаётся в /login и /register.
 Все запросы — с заголовком <code>Accept: application/json</code>. Ошибки возвращаются в едином формате <code>{"message": "..."}</code>, ошибки валидации дополнительно с <code>errors</code>.<br>
 <b>Роли:</b> гость, patient (пациент), doctor (врач), admin (администратор). <b>Тестовые учётные записи</b> (пароль <code>password</code>): admin@clinic.ru, doctor@clinic.ru, patient@clinic.ru.</div><h2 id="g0">Аутентификация</h2><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/register</code><span class="role">гость</span></div>
 <p>Регистрация пациента. Возвращает пользователя и токен.</p><div class="cols"><div><div class="lbl">Тело запроса (JSON)</div><pre>{
@@ -276,7 +276,45 @@ pre{background:#1e1e1e;color:#d4d4d4;padding:8px 10px;border-radius:6px;font-siz
       }
     ]
   }
-}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span></div></div><h2 id="g3">График работы</h2><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/doctors/{id}/schedules</code><span class="role">все</span></div>
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Запись не найдена</span></div></div><h2 id="gp">Цены (₸)</h2><p>Все цены — целые числа в тенге. У врача поле <code>price</code> — стоимость приёма; в записи на приём <code>price</code> фиксируется в момент записи. Поле <code>price_formatted</code> — строка вида «9 000 ₸». В статистике добавлены <code>revenue</code> и <code>revenue_formatted</code> — выручка за завершённые приёмы.</p><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/services</code><span class="role">все</span></div>
+<p>Прейскурант. Параметры: <code>specialty_id</code>, <code>search</code>, <code>price_min</code>, <code>price_max</code>, <code>sort</code> (name, price), <code>order</code>.</p><div class="cols"><div><div class="lbl">Запрос</div><pre>GET /api/v1/services?specialty_id=3&amp;sort=price</pre></div><div><div class="lbl">Ответ — 200 OK</div><pre>{ "data": [ {
+    "id": 4,
+    "name": "Консультация кардиолога",
+    "price": 9000,
+    "price_formatted": "9 000 ₸",
+    "duration_minutes": 30,
+    "description": null,
+    "specialty": { "id": 3, "name": "Кардиолог" }
+  } ] }</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/services/{id}</code><span class="role">все</span></div>
+<p>Одна услуга.</p><div class="cols"><div></div><div><div class="lbl">Ответ — 200 OK</div><pre>{
+  "id": 4,
+  "name": "Консультация кардиолога",
+  "price": 9000,
+  "price_formatted": "9 000 ₸",
+  "duration_minutes": 30,
+  "description": null,
+  "specialty": { "id": 3, "name": "Кардиолог" }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">404 Услуга не найдена</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#1565c0">POST</span><code>/api/v1/services</code><span class="role">admin</span></div>
+<p>Добавить услугу.</p><div class="cols"><div><div class="lbl">Запрос</div><pre>{ "name": "ЭКГ с расшифровкой", "price": 4000,
+  "specialty_id": 3, "duration_minutes": 20 }</pre></div><div><div class="lbl">Ответ — 201 Created</div><pre>{
+  "id": 4,
+  "name": "Консультация кардиолога",
+  "price": 9000,
+  "price_formatted": "9 000 ₸",
+  "duration_minutes": 30,
+  "description": null,
+  "specialty": { "id": 3, "name": "Кардиолог" }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#ef6c00">PUT</span><code>/api/v1/services/{id}</code><span class="role">admin</span></div>
+<p>Изменить услугу (в т. ч. цену).</p><div class="cols"><div><div class="lbl">Запрос</div><pre>{ "price": 9500 }</pre></div><div><div class="lbl">Ответ — 200 OK</div><pre>{
+  "id": 4,
+  "name": "Консультация кардиолога",
+  "price": 9000,
+  "price_formatted": "9 000 ₸",
+  "duration_minutes": 30,
+  "description": null,
+  "specialty": { "id": 3, "name": "Кардиолог" }
+}</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Услуга не найдена</span><span class="err">422 Ошибка валидации</span></div></div><div class="ep"><div class="head"><span class="m" style="background:#c62828">DELETE</span><code>/api/v1/services/{id}</code><span class="role">admin</span></div>
+<p>Удалить услугу из прейскуранта.</p><div class="cols"><div></div><div><div class="lbl">Ответ — 204 No Content</div><pre>—</pre></div></div><div class="lbl">Коды ошибок</div><div><span class="err">401 Требуется авторизация</span><span class="err">403 Недостаточно прав</span><span class="err">404 Услуга не найдена</span></div></div><h2 id="g3">График работы</h2><div class="ep"><div class="head"><span class="m" style="background:#2e7d32">GET</span><code>/api/v1/doctors/{id}/schedules</code><span class="role">все</span></div>
 <p>График работы врача по дням недели.</p><div class="cols"><div></div><div><div class="lbl">Пример ответа — 200</div><pre>{
   &quot;data&quot;: [
     {

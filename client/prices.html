@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Цены на услуги — Поликлиника</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<header><div class="logo">🏥 Поликлиника</div><nav></nav><div id="user-box"></div></header>
+<main>
+  <div class="card">
+    <h2>Прейскурант платных услуг</h2>
+    <p class="muted">Цены указаны в тенге (₸). Стоимость приёма конкретного врача — в его карточке.</p>
+    <form class="filters" id="filters" style="grid-template-columns: 1.4fr 1.2fr 1fr 1fr auto">
+      <div><label>Поиск по названию</label><input name="search" placeholder="Например: УЗИ"></div>
+      <div><label>Специальность</label><select name="specialty_id"><option value="">Все</option></select></div>
+      <div><label>Цена до, ₸</label><input name="price_max" type="number" min="0" step="500"></div>
+      <div><label>Сортировка</label><select name="sort"><option value="name">По названию</option><option value="price">По цене</option></select></div>
+      <div><button class="btn primary-sm" type="submit">Найти</button></div>
+    </form>
+    <div class="alert" id="list-error" hidden></div>
+    <div id="groups"><p class="muted">Загрузка…</p></div>
+  </div>
+
+  <div class="card" data-role="admin" hidden>
+    <h2 id="svc-title">Добавить услугу</h2>
+    <form id="svc-form" novalidate>
+      <input type="hidden" name="svc_id">
+      <div class="grid2">
+        <div><label>Название *</label><input name="name" required maxlength="255"><div class="field-error" data-error="name"></div></div>
+        <div><label>Специальность</label><select name="specialty_id"><option value="">Без специальности (анализы, УЗИ…)</option></select><div class="field-error" data-error="specialty_id"></div></div>
+      </div>
+      <div class="grid2">
+        <div><label>Стоимость, ₸ *</label><input name="price" type="number" min="0" step="500" required><div class="field-error" data-error="price"></div></div>
+        <div><label>Длительность, мин</label><input name="duration_minutes" type="number" min="5" max="480"><div class="field-error" data-error="duration_minutes"></div></div>
+      </div>
+      <div class="alert" hidden></div>
+      <div style="display:flex;gap:10px"><button class="primary" type="submit">Сохранить</button>
+        <button class="primary" type="button" id="svc-reset" style="background:#7b8794">Очистить</button></div>
+    </form>
+  </div>
+</main>
+<script src="js/config.js"></script><script src="js/api.js"></script>
+<script>
+  const form = document.getElementById('filters');
+  const svc = document.getElementById('svc-form');
+  let user = null, list = [];
+
+  async function loadSpecialties() {
+    const res = await api('GET', '/specialties');
+    if (!res.ok) return;
+    const opts = res.data.data.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    form.specialty_id.innerHTML += opts;
+    svc.elements.specialty_id.innerHTML += opts;
+  }
+
+  async function load() {
+    const params = Object.fromEntries(new FormData(form));
+    const res = await api('GET', '/services?' + qs(params));
+    const err = document.getElementById('list-error');
+    const box = document.getElementById('groups');
+    if (!res.ok) {
+      err.hidden = false; err.textContent = res.errors ? Object.values(res.errors).flat().join(' ') : res.message;
+      box.innerHTML = ''; return;
+    }
+    err.hidden = true;
+    list = res.data.data;
+    if (!list.length) { box.innerHTML = '<p class="muted">Ничего не найдено</p>'; return; }
+    // группировка по специальности, услуги без специальности — в конце
+    const groups = {};
+    list.forEach(s => { const g = s.specialty?.name ?? 'Анализы и диагностика'; (groups[g] = groups[g] || []).push(s); });
+    const names = Object.keys(groups).sort((a, b) => (a === 'Анализы и диагностика') - (b === 'Анализы и диагностика') || a.localeCompare(b, 'ru'));
+    const admin = user?.role === 'admin';
+    box.innerHTML = names.map(g => `<div class="price-group"><h3>${esc(g)}</h3>
+      <table><thead><tr><th>Услуга</th><th style="width:140px">Длительность</th><th style="width:140px;text-align:right">Стоимость</th>${admin ? '<th style="width:190px"></th>' : ''}</tr></thead><tbody>
+      ${groups[g].map(s => `<tr><td>${esc(s.name)}</td><td class="muted">${s.duration_minutes ? s.duration_minutes + ' мин' : '—'}</td>
+        <td class="price-num">${esc(s.price_formatted)}</td>
+        ${admin ? `<td style="white-space:nowrap"><button class="btn" data-edit="${s.id}">Изменить</button> <button class="btn danger" data-del="${s.id}">Удалить</button></td>` : ''}</tr>`).join('')}
+      </tbody></table></div>`).join('');
+    box.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => edit(+b.dataset.edit));
+    box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => remove(+b.dataset.del));
+  }
+
+  function edit(id) {
+    const s = list.find(x => x.id === id);
+    const e = svc.elements;
+    e.svc_id.value = s.id; e.name.value = s.name; e.specialty_id.value = s.specialty?.id ?? '';
+    e.price.value = s.price; e.duration_minutes.value = s.duration_minutes ?? '';
+    document.getElementById('svc-title').textContent = 'Изменить услугу';
+    showErrors(svc, {});
+    svc.scrollIntoView({ behavior: 'smooth' });
+  }
+  function reset() { svc.reset(); svc.elements.svc_id.value = ''; document.getElementById('svc-title').textContent = 'Добавить услугу'; showErrors(svc, {}); }
+  document.getElementById('svc-reset').onclick = reset;
+
+  async function remove(id) {
+    const s = list.find(x => x.id === id);
+    if (!confirm(`Удалить услугу «${s.name}» (${s.price_formatted}) из прейскуранта?`)) return;
+    const res = await api('DELETE', '/services/' + id);
+    if (res.ok) { toast('Услуга удалена'); load(); } else toast(res.message, 'err');
+  }
+
+  svc.onsubmit = async (ev) => {
+    ev.preventDefault();
+    if (!checkRequired(svc)) return;
+    const e = svc.elements;
+    const body = {
+      name: e.name.value, price: Number(e.price.value),
+      specialty_id: e.specialty_id.value ? Number(e.specialty_id.value) : null,
+      duration_minutes: e.duration_minutes.value ? Number(e.duration_minutes.value) : null,
+    };
+    const id = e.svc_id.value;
+    const res = id ? await api('PUT', '/services/' + id, body) : await api('POST', '/services', body);
+    if (res.ok) { toast(`Сохранено: ${res.data.data.name} — ${res.data.data.price_formatted}`); reset(); load(); }
+    else showErrors(svc, res.errors, res.message);
+  };
+
+  form.onsubmit = (e) => { e.preventDefault(); load(); };
+  form.specialty_id.onchange = form.sort.onchange = load;
+
+  (async () => {
+    user = await renderHeader();
+    await loadSpecialties();
+    load();
+  })();
+</script>
+</body>
+</html>
