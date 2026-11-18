@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Clinic API — документация",
-    "description": "REST API записи в поликлинику (Laravel 13 + Sanctum). Базовый адрес {{base_url}} = http://127.0.0.1:8000/api/v1. Авторизация Bearer {{token}} (сохраняется автоматически после /login). Тестовые пользователи: admin@clinic.ru, doctor@clinic.ru, patient@clinic.ru, пароль password.",
+    "description": "REST API записи в поликлинику (Laravel 13 + Sanctum). Базовый адрес {{base_url}} = http://127.0.0.1:8000/api/v1. Авторизация Bearer {{token}} (сохраняется автоматически после /login). Тестовые пользователи: admin@clinic.ru, doctor@clinic.ru, patient@clinic.ru, пароль password.\n\nЦены: GET/POST/PUT/DELETE /services, поле price (₸) у врачей и записей, revenue в статистике.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -776,7 +776,7 @@
             "description": "Создать врача: учётная запись + профиль + специальности (транзакция).\n\n**Доступ:** admin\n\n**Успешный ответ:** 201\n\n**Ошибки:** 401 — Требуется авторизация, 403 — Недостаточно прав, 422 — Ошибка валидации",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Кузнецов Андрей\",\n  \"email\": \"kuznecov@clinic.ru\",\n  \"password\": \"password123\",\n  \"cabinet\": \"204\",\n  \"experience_years\": 7,\n  \"specialty_ids\": [\n    2,\n    4\n  ]\n}"
+              "raw": "{\n  \"name\": \"Кузнецов Андрей\",\n  \"email\": \"kuznecov@clinic.ru\",\n  \"password\": \"password123\",\n  \"cabinet\": \"204\",\n  \"experience_years\": 7,\n  \"specialty_ids\": [\n    2,\n    4\n  ],\n  \"price\": 8000\n}"
             }
           },
           "response": [
@@ -1204,6 +1204,255 @@
                 }
               ],
               "body": "{\"message\": \"Запись не найдена\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Цены (₸)",
+      "description": "Прейскурант платных услуг и цены в тенге. В записях и у врачей поле price — целое число тенге, price_formatted — строка «9 000 ₸».",
+      "item": [
+        {
+          "name": "GET /services",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/services?specialty_id=3&sort=price&order=asc",
+            "description": "Прейскурант. Фильтры: specialty_id, search, price_min, price_max; сортировка sort=name|price, order.\n\n**Доступ:** все\n\n**Ответ:** 200\n\n**Ошибки:** 422",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/services?specialty_id=3&sort=price&order=asc"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 4,\n      \"name\": \"Консультация кардиолога\",\n      \"price\": 9000,\n      \"price_formatted\": \"9 000 ₸\",\n      \"duration_minutes\": 30,\n      \"description\": null,\n      \"specialty\": {\n        \"id\": 3,\n        \"name\": \"Кардиолог\"\n      }\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /services/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/services/4",
+            "description": "Одна услуга.\n\n**Доступ:** все\n\n**Ошибки:** 404 «Услуга не найдена»",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{base_url}}/services/4"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Консультация кардиолога\",\n    \"price\": 9000,\n    \"price_formatted\": \"9 000 ₸\",\n    \"duration_minutes\": 30,\n    \"description\": null,\n    \"specialty\": {\n      \"id\": 3,\n      \"name\": \"Кардиолог\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /services",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/services",
+            "description": "Добавить услугу.\n\n**Доступ:** admin\n\n**Ответ:** 201\n\n**Ошибки:** 401, 403, 422",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Консультация кардиолога\",\n  \"price\": 9000,\n  \"specialty_id\": 3,\n  \"duration_minutes\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/services"
+              },
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Консультация кардиолога\",\n    \"price\": 9000,\n    \"price_formatted\": \"9 000 ₸\",\n    \"duration_minutes\": 30,\n    \"description\": null,\n    \"specialty\": {\n      \"id\": 3,\n      \"name\": \"Кардиолог\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /services — 422 отрицательная цена",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/services",
+            "description": "Проверка валидации цены.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"УЗИ\",\n  \"price\": -5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "422",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/services"
+              },
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Ошибка валидации\",\n  \"errors\": {\n    \"price\": [\n      \"Стоимость не может быть отрицательной\"\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /services/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/services/4",
+            "description": "Изменить услугу или цену.\n\n**Доступ:** admin\n\n**Ошибки:** 401, 403, 404, 422",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 9500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{base_url}}/services/4"
+              },
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Консультация кардиолога\",\n    \"price\": 9500,\n    \"price_formatted\": \"9 500 ₸\",\n    \"duration_minutes\": 30,\n    \"description\": null,\n    \"specialty\": {\n      \"id\": 3,\n      \"name\": \"Кардиолог\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /services/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/services/4",
+            "description": "Удалить услугу.\n\n**Доступ:** admin\n\n**Ответ:** 204\n\n**Ошибки:** 401, 403, 404"
+          },
+          "response": [
+            {
+              "name": "204",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/services/4"
+              },
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
             }
           ]
         }
