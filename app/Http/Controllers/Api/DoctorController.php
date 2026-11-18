@@ -11,14 +11,14 @@ use App\Http\Resources\DoctorResource;
 use App\Models\Doctor;
 use App\Services\AppointmentService;
 use App\Services\DoctorService;
+use Illuminate\Support\Carbon;
 
 class DoctorController extends Controller
 {
     public function __construct(
         private readonly DoctorService $service,
         private readonly AppointmentService $appointments,
-    ) {
-    }
+    ) {}
 
     /** GET /doctors?search=&specialty_id=&experience_min=&sort=&order=&page=&per_page= */
     public function index(DoctorIndexRequest $request)
@@ -35,7 +35,7 @@ class DoctorController extends Controller
         return response()->json([
             'doctor_id' => $doctor->id,
             'date' => $date,
-            'works' => $doctor->schedules()->where('weekday', \Illuminate\Support\Carbon::parse($date)->dayOfWeekIso)->exists(),
+            'works' => $doctor->schedules()->where('weekday', Carbon::parse($date)->dayOfWeekIso)->exists(),
             'free_slots' => $slots,
             'free_count' => count($slots),
         ]);

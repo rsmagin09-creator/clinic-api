@@ -12,9 +12,7 @@ use App\Services\ScheduleService;
 
 class ScheduleController extends Controller
 {
-    public function __construct(private readonly ScheduleService $service)
-    {
-    }
+    public function __construct(private readonly ScheduleService $service) {}
 
     /** GET /doctors/{doctor}/schedules */
     public function index(Doctor $doctor)

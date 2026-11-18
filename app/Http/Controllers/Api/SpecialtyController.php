@@ -13,9 +13,7 @@ use Illuminate\Http\Response;
 
 class SpecialtyController extends Controller
 {
-    public function __construct(private readonly SpecialtyService $service)
-    {
-    }
+    public function __construct(private readonly SpecialtyService $service) {}
 
     /** GET /api/v1/specialties */
     public function index(): AnonymousResourceCollection

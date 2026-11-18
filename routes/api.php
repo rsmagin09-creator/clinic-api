@@ -26,7 +26,7 @@ Route::get('/health', function () {
         $response['db_name'] = DB::connection()->getDatabaseName();
 
         return response()->json($response, 200);
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         $response['database'] = 'error';
 
         return response()->json($response, 503);

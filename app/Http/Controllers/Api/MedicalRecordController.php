@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Gate;
 
 class MedicalRecordController extends Controller
 {
-    public function __construct(private readonly MedicalRecordService $service)
-    {
-    }
+    public function __construct(private readonly MedicalRecordService $service) {}
 
     /** GET /medical-records?patient_id= */
     public function index(Request $request)

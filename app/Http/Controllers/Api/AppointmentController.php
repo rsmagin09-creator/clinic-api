@@ -17,9 +17,7 @@ use Illuminate\Support\Facades\Gate;
 
 class AppointmentController extends Controller
 {
-    public function __construct(private readonly AppointmentService $service)
-    {
-    }
+    public function __construct(private readonly AppointmentService $service) {}
 
     /** GET /appointments?status=&doctor_id=&date_from=&date_to=&sort=&order=&page=&per_page= */
     public function index(AppointmentIndexRequest $request)

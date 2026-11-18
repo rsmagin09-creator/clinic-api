@@ -13,9 +13,7 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function __construct(private readonly UserService $service)
-    {
-    }
+    public function __construct(private readonly UserService $service) {}
 
     /** GET /users?role= */
     public function index(Request $request)

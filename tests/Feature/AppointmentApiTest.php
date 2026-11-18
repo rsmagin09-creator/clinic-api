@@ -17,7 +17,9 @@ class AppointmentApiTest extends TestCase
     use RefreshDatabase;
 
     private Doctor $doctor;
+
     private User $patient;
+
     private string $date;
 
     protected function setUp(): void

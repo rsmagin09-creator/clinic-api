@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Support\Money;
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
 use App\Models\Doctor;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 class StatsService

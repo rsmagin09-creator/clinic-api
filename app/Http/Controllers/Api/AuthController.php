@@ -11,9 +11,7 @@ use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly AuthService $service)
-    {
-    }
+    public function __construct(private readonly AuthService $service) {}
 
     /** POST /api/v1/register */
     public function register(RegisterRequest $request)

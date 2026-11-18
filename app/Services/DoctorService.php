@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 class DoctorService
 {
     private const USER_FIELDS = ['name', 'email', 'phone', 'password'];
+
     private const DOCTOR_FIELDS = ['cabinet', 'experience_years', 'price', 'description'];
 
     /** Белый список полей сортировки. */

@@ -8,9 +8,7 @@ use App\Services\StatsService;
 
 class StatsController extends Controller
 {
-    public function __construct(private readonly StatsService $service)
-    {
-    }
+    public function __construct(private readonly StatsService $service) {}
 
     /** GET /stats/appointments?from=&to= — по умолчанию текущий месяц */
     public function appointments(StatsRequest $request)

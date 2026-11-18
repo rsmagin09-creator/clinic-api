@@ -1,9 +1,12 @@
 <?php
 
 use App\Exceptions\BusinessException;
+use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\LogApiRequests;
 use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\MedicalRecord;
+use App\Models\MedicalService;
 use App\Models\Schedule;
 use App\Models\Specialty;
 use App\Models\User;
@@ -14,6 +17,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -31,11 +35,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Псевдоним middleware проверки роли: ->middleware('role:admin')
         // Журналирование каждого запроса к API
         $middleware->api(append: [
-            \App\Http\Middleware\LogApiRequests::class,
+            LogApiRequests::class,
         ]);
 
         $middleware->alias([
-            'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+            'role' => EnsureUserHasRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -57,9 +61,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // 409 — нарушение бизнес-правила (BusinessException)
         $exceptions->render(function (BusinessException $e, Request $request) use ($isApi) {
             if ($isApi($request)) {
-                \Illuminate\Support\Facades\Log::warning('Нарушение бизнес-правила: '.$e->getMessage(), [
+                Log::warning('Нарушение бизнес-правила: '.$e->getMessage(), [
                     'user_id' => $request->user()?->id, 'url' => $request->path(),
                 ]);
+
                 return response()->json(['message' => $e->getMessage()], 409);
             }
         });
@@ -87,7 +92,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($previous instanceof ModelNotFoundException) {
                 $message = match ($previous->getModel()) {
                     Specialty::class => 'Специальность не найдена',
-                    \App\Models\MedicalService::class => 'Услуга не найдена',
+                    MedicalService::class => 'Услуга не найдена',
                     Doctor::class => 'Врач не найден',
                     Schedule::class => 'Рабочий день не найден',
                     Appointment::class => 'Запись на приём не найдена',
@@ -126,7 +131,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // 500 — непредвиденная ошибка: без стека вызовов и SQL (подробности только в журнале)
-        $exceptions->render(function (\Throwable $e, Request $request) use ($isApi) {
+        $exceptions->render(function (Throwable $e, Request $request) use ($isApi) {
             if ($isApi($request) && ! config('app.debug')) {
                 return response()->json(['message' => 'Внутренняя ошибка сервера. Попробуйте позже'], 500);
             }
